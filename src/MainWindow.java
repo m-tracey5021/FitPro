@@ -31,7 +31,7 @@ public class MainWindow implements EventHandler<ActionEvent> {
 	private Stage window;
 	private Scene s1;
 	private GridPane g1, g2;
-	private HBox workoutsView, currentFocusPane, navButtons, weekDaysPane, bottomPaneLeft, bottomPaneRight;
+	private HBox workoutsView, currentFocusPane, navButtons, bottomPaneLeft, bottomPaneRight;
 	private ImageView imageView;
 	private Image logo;
 	private VBox radioButtons;
@@ -332,27 +332,11 @@ public class MainWindow implements EventHandler<ActionEvent> {
 		defaultView.getStyleClass().add("defaultView");
 		defaultView.getChildren().add(noCycleLabel);
 		defaultView.setPrefWidth(700);
-		
 		GridPane.setConstraints(defaultView, 1, 3);
 		g1.getChildren().add(defaultView);
-		//double scrollHeight = scrollPane.getHeight();
-		//double scrollWidth = scrollPane.getWidth();
-		//System.out.println(scrollHeight);
-		
-		
-		//AnchorPane.setRightAnchor(noCycleLabel, 315.0);
-		//AnchorPane.setTopAnchor(noCycleLabel, 100.0);
-		//AnchorPane.setBottomAnchor(noCycleLabel, 100.0);
-		
-		
-		
-		AnchorPane.setLeftAnchor(noCycleLabel, 315.0);
-		AnchorPane.setTopAnchor(noCycleLabel, 100.0);
-		//centerInAnchorPane(noCycleLabel, 630, 200);
-		
-
-		
 	}
+	
+	
 	public void pickCalendarView(LocalDate date) {
 		if (YMWSelection.getSelectedToggle() == yearSelection) {
 			setUpCurrentFocusPane("Year", date);

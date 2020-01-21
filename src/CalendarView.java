@@ -26,8 +26,8 @@ public class CalendarView extends GridPane {
 	
 	private GridPane calendarGrid, intermediateGrid;
 	private ScrollPane scrollPane;
-	private HBox weekDaysPane;
-	private VBox axisLabelPane;
+	private HBox horizontalAxisLabelPane;
+	private VBox verticalAxisLabelPane;
 	private BorderPane borderPane;
 	private WindowController windowController;
 	private ArrayList<DateSlot> allDateSlots;
@@ -75,16 +75,14 @@ public class CalendarView extends GridPane {
 		
 		GridPane.setConstraints(scrollPane, 0, 1);
 		
-		weekDaysPane = new HBox();
-		weekDaysPane.setPrefWidth(calendarWidth);
-		weekDaysPane.setPrefHeight(110);
-		GridPane.setConstraints(weekDaysPane, 0, 0);
+		horizontalAxisLabelPane = new HBox();
+		horizontalAxisLabelPane.setPrefWidth(calendarWidth);
+		horizontalAxisLabelPane.setPrefHeight(110);
+		GridPane.setConstraints(horizontalAxisLabelPane, 0, 0);
 		
 		//this.setPadding(new Insets(10, 10, 10, 10));
-		this.getChildren().addAll(weekDaysPane, scrollPane);
-		this.applyCss();
-		this.layout();
-		System.out.println(scrollPane.getWidth());
+		this.getChildren().addAll(horizontalAxisLabelPane, scrollPane);
+
 		
 		
 		//this.setGridLinesVisible(true);
@@ -131,37 +129,41 @@ public class CalendarView extends GridPane {
 			labels = new ArrayList<String>();
 		}
 		
-		weekDaysPane.getChildren().clear();
+		horizontalAxisLabelPane.getChildren().clear();
 		
 		StackPane dummyPane1 = new StackPane();
 		dummyPane1.setPrefSize(edgeWidth, 110);
-		weekDaysPane.getChildren().add(dummyPane1);
+		horizontalAxisLabelPane.getChildren().add(dummyPane1);
+		
 		
 		
 		for (int i = 0; i < iterations; i ++) {
 			
 			Label dayLabel = new Label(labels.get(i));
 			StackPane labelPane = new StackPane();
-			//AnchorPane.setLeftAnchor(dayLabel, dateSlotWidth / 2);
-			//AnchorPane.setTopAnchor(dayLabel, 85.0);
+			if (i == iterations - 1) {
+				labelPane.getStyleClass().add("farRightInGroup");
+			}else {
+				labelPane.getStyleClass().add("otherInGroup");
+			}
 			labelPane.setPrefSize(dateSlotWidth, 110);
 			labelPane.getChildren().add(dayLabel);
-			weekDaysPane.getChildren().add(labelPane);
+			horizontalAxisLabelPane.getChildren().add(labelPane);
 		}
 		StackPane dummyPane2 = new StackPane();
 		dummyPane2.setPrefSize(edgeWidth, 110);
-		weekDaysPane.getChildren().add(dummyPane2);
+		horizontalAxisLabelPane.getChildren().add(dummyPane2);
 	}	
 	public void setUpVerticalAxisLabels(String type, int rows) {
-		axisLabelPane = new VBox();
+		verticalAxisLabelPane = new VBox();
 		if (type.equals("Week")) {
 			for (int i = 0; i < rows; i ++) {
 				StackPane pane = new StackPane();
 				pane.setPrefSize(edgeWidth, 30);
 				Label timeLabel = new Label(i + ":00");
 				pane.getChildren().add(timeLabel);
-				axisLabelPane.getChildren().add(pane);
-				borderPane.setLeft(axisLabelPane);
+				verticalAxisLabelPane.getChildren().add(pane);
+				borderPane.setLeft(verticalAxisLabelPane);
 
 			}
 		}else if (type.equals("Month")) {
@@ -170,8 +172,8 @@ public class CalendarView extends GridPane {
 				pane.setPrefSize(edgeWidth, 30);
 				Label weekLabel = new Label("Week " + (i + 1));
 				pane.getChildren().add(weekLabel);
-				axisLabelPane.getChildren().add(pane);
-				borderPane.setLeft(axisLabelPane);
+				verticalAxisLabelPane.getChildren().add(pane);
+				borderPane.setLeft(verticalAxisLabelPane);
 
 			}
 		}else if (type.equals("Year")){
@@ -180,8 +182,8 @@ public class CalendarView extends GridPane {
 				pane.setPrefSize(edgeWidth, 20);
 				Label dateLabel = new Label(Integer.toString(i + 1));
 				pane.getChildren().add(dateLabel);
-				axisLabelPane.getChildren().add(pane);
-				borderPane.setLeft(axisLabelPane);
+				verticalAxisLabelPane.getChildren().add(pane);
+				borderPane.setLeft(verticalAxisLabelPane);
 
 			}
 		}else {
@@ -217,17 +219,20 @@ public class CalendarView extends GridPane {
 		
 		
 		if (type.equals("Week")) {
-			setUpHorizontalAxisLabels("Week");
+			
 			setUpWeekView();
+			setUpHorizontalAxisLabels("Week");
 			
 		}else if (type.equals("Month")) {
-			setUpHorizontalAxisLabels("Month");
+			
 			setUpMonthView();
+			setUpHorizontalAxisLabels("Month");
 			
 			
 		} else if (type.equals("Year")) {
-			setUpHorizontalAxisLabels("Year");
+			
 			setUpYearView();
+			setUpHorizontalAxisLabels("Year");
 		}
 
 	}

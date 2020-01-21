@@ -21,7 +21,7 @@ public class SQLService {
 	public void connect() {
 		try {
 			connect = DriverManager.getConnection("jdbc:mysql://localhost/FitProDatabase?"
-	    			+"user=root&password=3v3rChang1ng");
+	    			+"user=root&password=r!ty_W0rd53cU");
 			
 			
 			System.out.println("Connected Successfully!");
