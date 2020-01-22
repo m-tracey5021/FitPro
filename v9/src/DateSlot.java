@@ -58,9 +58,10 @@ public class DateSlot extends AnchorPane {
 	public String toString() {
 		return date.toString() + " " + time.toString();
 	}
-	public void setUpDateSlot(WindowController windowController, NodeContainer nodeContainer) {
+	public void setUpDateSlot(WindowController windowController, DateNodeContainer nodeContainer) {
 		
 		DateSlot dateSlot = this;
+		//System.out.println(date);
 		
 		dateSlot.setOnDragOver(new EventHandler <DragEvent>() {
             public void handle(DragEvent event) {
@@ -85,10 +86,11 @@ public class DateSlot extends AnchorPane {
 		dateSlot.setOnDragEntered(new EventHandler <DragEvent>() {
             public void handle(DragEvent event) {
                 /* the drag-and-drop gesture entered the target */
+            	
                 //System.out.println("onDragEntered");
                 /* show to the user that it is an actual gesture target */
-            	System.out.println(dateSlot.date);
-            	System.out.println(dateSlot.getIsPassed());
+            	//System.out.println(dateSlot.date);
+            	//System.out.println(dateSlot.getIsPassed());
             	
             	if (dateSlot.getIsPassed() == false) {
             		
