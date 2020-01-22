@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.Month;
 import java.time.format.DateTimeFormatter;
 
+import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
@@ -30,22 +31,23 @@ public class MainWindow implements EventHandler<ActionEvent> {
 	private Stage window;
 	private Scene s1;
 	private GridPane g1, g2;
-	private HBox workoutsView, currentFocusPane, navButtons, weekDaysPane, bottomPaneLeft, bottomPaneRight;
+	private HBox workoutsView, currentFocusPane, navButtons, bottomPaneLeft, bottomPaneRight;
 	private ImageView imageView;
 	private Image logo;
 	private VBox radioButtons;
 	private CalendarView calendar;
-	private ScrollPane scrollPane;
+	private StackPane defaultView;
+	//private ScrollPane scrollPane;
 	private ListView<Cycle> cycleList;
 	private Label cyclesLabel, currentlyFocusedDate;
 	private Button selectButton, createCycleButton, nextButton, previousButton, saveButton, resetAllButton;
-	private ToggleGroup monthWeekSelection;
-	private RadioButton monthSelection, weekSelection;
+	private ToggleGroup YMWSelection;
+	private RadioButton yearSelection, monthSelection, weekSelection;
 	private String periodSelection;
 
 	private ArrayList<Cycle> cycles;
 	private Cycle selectedCycle;
-	private NodeContainer nodeContainer;
+	private DateNodeContainer nodeContainer;
 	private Workout selectedWorkout;
 
 	private WindowController windowController;
@@ -60,7 +62,7 @@ public class MainWindow implements EventHandler<ActionEvent> {
 		currentUser = user;
 		cycles = new ArrayList<Cycle>();
 		selectedCycle = null;
-		nodeContainer = new NodeContainer();
+		nodeContainer = new DateNodeContainer();
 		windowController = new WindowController();
 		dtf = DateTimeFormatter.ofPattern("dd/MM//yyyy");
 		sqlService = new SQLService();
@@ -77,6 +79,8 @@ public class MainWindow implements EventHandler<ActionEvent> {
 		g1.setPadding(new Insets(10, 10, 10, 10));
 		g1.setHgap(20);
 		g1.setVgap(10);
+		
+		
 		/*
 		 * g2 = new GridPane(); g2.setPadding(new Insets(10, 10, 10, 10));
 		 * g2.setHgap(20); g2.setVgap(10);
@@ -91,11 +95,17 @@ public class MainWindow implements EventHandler<ActionEvent> {
 		
 
 		cyclesLabel = new Label("Cycles: ");
+		AnchorPane cyclesLabelPane = new AnchorPane();
+		AnchorPane.setTopAnchor(cyclesLabel, 85.0);
+		AnchorPane.setLeftAnchor(cyclesLabel, 0.0);
+		cyclesLabelPane.setPrefHeight(100);
+		cyclesLabelPane.getChildren().add(cyclesLabel);
 		// GridPane.setMargin(cyclesLabel, new Insets(75, 0, 0, 0));
-		cyclesLabel.setPadding(new Insets(50, 0, 0, 0));
-		GridPane.setConstraints(cyclesLabel, 0, 2);
+		//cyclesLabel.setPadding(new Insets(50, 0, 0, 0));
+		GridPane.setConstraints(cyclesLabelPane, 0, 2);
 
 		cycleList = new ListView<Cycle>();
+		cycleList.setPrefHeight(275);
 		cycleList.getItems().addAll(cycles);
 		GridPane.setConstraints(cycleList, 0, 3, 1, 1, HPos.CENTER, VPos.CENTER);
 
@@ -105,8 +115,11 @@ public class MainWindow implements EventHandler<ActionEvent> {
 			if (cycles.size() != 0) {
 				selectedCycle = cycleList.getSelectionModel().getSelectedItem();
 				readyDate();
-				setUpWeekDaysPane();
-				scrollPane.setContent(calendar);
+				g1.getChildren().remove(defaultView);
+				if (!(g1.getChildren().contains(calendar))) {
+					g1.getChildren().add(calendar);
+				}
+				
 				pickCalendarView(currentDatePointer);
 				previousButton.setDisable(false);
 				nextButton.setDisable(false);
@@ -141,34 +154,37 @@ public class MainWindow implements EventHandler<ActionEvent> {
 		//workoutsView.setStyle("-fx-border-style: solid inside");
 		GridPane.setConstraints(workoutsView, 1, 0, 1, 1, HPos.CENTER, VPos.CENTER);
 		setUpWorkoutsView();
-
+		
 		/*
 		 * have a top panel with all the workouts to drag onto the calendarViewer
 		 */
-		monthWeekSelection = new ToggleGroup();
+		YMWSelection = new ToggleGroup();
 
 		radioButtons = new VBox(10);
 		
+		yearSelection = new RadioButton("Year View");
+		yearSelection.setToggleGroup(YMWSelection);
+		
 		monthSelection = new RadioButton("Month View");
-		monthSelection.setToggleGroup(monthWeekSelection);
+		monthSelection.setToggleGroup(YMWSelection);
 
 		weekSelection = new RadioButton("Week View");
-		weekSelection.setToggleGroup(monthWeekSelection);
+		weekSelection.setToggleGroup(YMWSelection);
 		weekSelection.setSelected(true);
 		
 
-		radioButtons.getChildren().addAll(monthSelection, weekSelection);
+		radioButtons.getChildren().addAll(yearSelection, monthSelection, weekSelection);
 
 		previousButton = new Button("<< ");
 		previousButton.setOnAction(e -> {
-			if (monthWeekSelection.getSelectedToggle() == monthSelection) {
+			if (YMWSelection.getSelectedToggle() == monthSelection) {
 				//calendar.previousTerm("Month");
-				scrollPane.setContent(calendar);
+				//scrollPane.setContent(calendar);
 				pickCalendarView(currentDatePointer.minusMonths(1));
 				currentDatePointer = currentDatePointer.minusMonths(1);
-			}else if (monthWeekSelection.getSelectedToggle() == weekSelection) {
+			}else if (YMWSelection.getSelectedToggle() == weekSelection) {
 				//calendar.previousTerm("Week");
-				scrollPane.setContent(calendar);
+				//scrollPane.setContent(calendar);
 				pickCalendarView(currentDatePointer.minusDays(7));
 				currentDatePointer = currentDatePointer.minusDays(7);
 			}
@@ -179,14 +195,14 @@ public class MainWindow implements EventHandler<ActionEvent> {
 		
 		nextButton = new Button(" >>");
 		nextButton.setOnAction(e -> {
-			if (monthWeekSelection.getSelectedToggle() == monthSelection) {
+			if (YMWSelection.getSelectedToggle() == monthSelection) {
 				//calendar.nextTerm("Month");
-				scrollPane.setContent(calendar);
+				//scrollPane.setContent(calendar);
 				pickCalendarView(currentDatePointer.plusMonths(1));
 				currentDatePointer = currentDatePointer.plusMonths(1);
-			}else if (monthWeekSelection.getSelectedToggle() == weekSelection) {
+			}else if (YMWSelection.getSelectedToggle() == weekSelection) {
 				//calendar.nextTerm("Week");
-				scrollPane.setContent(calendar);
+				//scrollPane.setContent(calendar);
 				pickCalendarView(currentDatePointer.plusDays(7));
 				currentDatePointer = currentDatePointer.plusDays(7);
 			}
@@ -197,6 +213,7 @@ public class MainWindow implements EventHandler<ActionEvent> {
 		navButtons = new HBox(25);
 		navButtons.setAlignment(Pos.CENTER);
 		navButtons.getChildren().addAll(previousButton, nextButton);
+		
 		//GridPane.setConstraints(topRightPane, 1, 1, 1, 1, HPos.CENTER, VPos.CENTER);
 
 		currentFocusPane = new HBox();
@@ -204,38 +221,45 @@ public class MainWindow implements EventHandler<ActionEvent> {
 		GridPane.setConstraints(currentFocusPane, 1, 1, 1, 1, HPos.CENTER, VPos.CENTER);
 		GridPane.setMargin(currentFocusPane, new Insets(10, 0, 10, 0));
 
-		monthWeekSelection.selectedToggleProperty().addListener(new ChangeListener<Toggle>() {
+		YMWSelection.selectedToggleProperty().addListener(new ChangeListener<Toggle>() {
 			public void changed(ObservableValue<? extends Toggle> value, Toggle oldTog, Toggle newTog) {
 				readyDate();
 				if (selectedCycle != null) { // if cycle is selected
 					pickCalendarView(currentDatePointer); // startDate must be set by this point under the cycle selection button
 				}else { // if no cycle selected
-					calendar.setUpDefaultView();
+					//setUpDefaultView();
 				}
 				
 				
 			}
 		});
 		
-		weekDaysPane = new HBox();
-		weekDaysPane.setPrefSize(630, 25);
+		//weekDaysPane = new HBox();
+		//weekDaysPane.setPrefSize(630, 25);
 		//setUpWeekDaysPane();
-		GridPane.setConstraints(weekDaysPane, 1, 2);
+		//GridPane.setConstraints(weekDaysPane, 1, 2);
 
-		calendar = new CalendarView(windowController, nodeContainer);
+		calendar = new CalendarView(windowController, nodeContainer, 700);
+		//calendar.setUpDefaultView();
+		GridPane.setConstraints(calendar, 1, 2, 1, 2);
+		
+		
+		
+		setUpDefaultView();
 		
 		
 		//calendar.setUpView("Week", defaultDate);
 		
 		
-		scrollPane = new ScrollPane();
-		//scrollPane.setPrefSize(800, 800);
+		//scrollPane = new ScrollPane();
+		//scrollPane.setPrefHeight(200);
+		//System.out.println(scrollPane.getWidth());
 		//scrollPane.setVmin(0.0);
 		//scrollPane.setVmax(500.0);
-		scrollPane.setContent(calendar);
-		GridPane.setConstraints(scrollPane, 1, 3);
+		//scrollPane.setContent(calendar);
+		//GridPane.setConstraints(scrollPane, 1, 3);
 		
-		setUpDefaultCalendarView();
+		//setUpDefaultCalendarView();
 
 		saveButton = new Button("Save Changes");
 		saveButton.setOnAction(e -> {
@@ -259,16 +283,26 @@ public class MainWindow implements EventHandler<ActionEvent> {
 		bottomPaneRight.setAlignment(Pos.BASELINE_CENTER);
 		GridPane.setConstraints(bottomPaneRight, 1, 4, 1, 1, HPos.CENTER, VPos.CENTER);
 
-		g1.getChildren().addAll(imageView, cyclesLabel, cycleList, workoutsView, currentFocusPane, weekDaysPane, scrollPane,
+		g1.getChildren().addAll(imageView, cyclesLabelPane, cycleList, workoutsView, currentFocusPane,
 				bottomPaneLeft, bottomPaneRight);
 		// g2.getChildren().addAll(workoutsView, topRightPane, scrollPane,
 		// bottomPaneRight);
+		//g1.applyCss();
+		//g1.layout();
+		//System.out.println("currentFocusPane width: " + currentFocusPane.getWidth());
 
 		s1 = new Scene(g1);
 		s1.getStylesheets().add("FitProStyle.css");
-		window.setHeight(600);
+		//window.setHeight(600);
 		window.setScene(s1);
 		window.show();
+		
+		//System.out.println("currentFocusPane width: " + currentFocusPane.getWidth());
+		setSizing(); // to be able to get the height and width of things the window has to be shown first
+		//System.out.println(scrollPane.getWidth());
+	}
+	public void setSizing() {
+		
 	}
 
 	public void readyCycles() {
@@ -289,30 +323,30 @@ public class MainWindow implements EventHandler<ActionEvent> {
 		}
 		
 	}
-	public void setUpDefaultCalendarView() {
-		AnchorPane center = new AnchorPane();
+	public void setUpDefaultView() {
+		defaultView = new StackPane();
 		Label noCycleLabel = new Label("Select a Cycle to get Started");
 		noCycleLabel.getStyleClass().clear();
 		noCycleLabel.getStyleClass().add("defaultLabel");
-		double scrollHeight = scrollPane.getHeight();
-		double scrollWidth = scrollPane.getWidth();
-		System.out.println(scrollHeight);
-		AnchorPane.setLeftAnchor(noCycleLabel, 0.0);
-		AnchorPane.setRightAnchor(noCycleLabel, 0.0);
-		AnchorPane.setTopAnchor(noCycleLabel, 0.0);
-		AnchorPane.setBottomAnchor(noCycleLabel, 0.0);
-		center.getChildren().clear();
-		center.getChildren().add(noCycleLabel);
-		
-		scrollPane.setContent(center);
-		
+		defaultView.getStyleClass().clear();
+		defaultView.getStyleClass().add("defaultView");
+		defaultView.getChildren().add(noCycleLabel);
+		defaultView.setPrefWidth(700);
+		GridPane.setConstraints(defaultView, 1, 3);
+		g1.getChildren().add(defaultView);
 	}
+	
+	
 	public void pickCalendarView(LocalDate date) {
-		if (monthWeekSelection.getSelectedToggle() == monthSelection) {
+		if (YMWSelection.getSelectedToggle() == yearSelection) {
+			setUpCurrentFocusPane("Year", date);
+			calendar.setUpView("Year", date);
+			setUpWorkoutsView();
+		}else if (YMWSelection.getSelectedToggle() == monthSelection) {
 			setUpCurrentFocusPane("Month", date);
 			calendar.setUpView("Month", date);
 			setUpWorkoutsView();
-		} else if (monthWeekSelection.getSelectedToggle() == weekSelection) {
+		} else if (YMWSelection.getSelectedToggle() == weekSelection) {
 			setUpCurrentFocusPane("Week", date);
 			calendar.setUpView("Week", date);
 			setUpWorkoutsView();
@@ -339,9 +373,9 @@ public class MainWindow implements EventHandler<ActionEvent> {
 					workoutsView.getChildren().add(newNode);
 				} else { // else add it to the calendar in its place
 					//System.out.println("WORKOUT HAS DATE");
-					if (monthWeekSelection.getSelectedToggle() == monthSelection) {
+					if (YMWSelection.getSelectedToggle() == monthSelection) {
 						calendar.addAllocatedWorkout(newNode, "Month");
-					} else if (monthWeekSelection.getSelectedToggle() == weekSelection) {
+					} else if (YMWSelection.getSelectedToggle() == weekSelection) {
 						calendar.addAllocatedWorkout(newNode, "Week");
 
 					}
@@ -349,7 +383,7 @@ public class MainWindow implements EventHandler<ActionEvent> {
 				}
 
 			}
-			calendar.scrollToFirstWorkout(scrollPane);
+			calendar.scrollToFirstWorkout();
 			
 		}
 	}
@@ -374,19 +408,21 @@ public class MainWindow implements EventHandler<ActionEvent> {
 		readyDate();
 
 	}
-	public <T extends Region> void centerInAnchorPane(T region, AnchorPane pane) {
-		//region.setMaxWidth(Double.MAX_VALUE);
-		AnchorPane.setLeftAnchor(region, 35.0);
-		//AnchorPane.setRightAnchor(region, 0.0);
-		AnchorPane.setTopAnchor(region, 0.0);
-		AnchorPane.setBottomAnchor(region, 0.0);
+	public <T extends Region> void centerInAnchorPane(T region, double width, double height) {
+		region.setMaxWidth(Double.MAX_VALUE);
+		AnchorPane.setLeftAnchor(region, width / 2);
+		AnchorPane.setRightAnchor(region, width / 2);
+		AnchorPane.setTopAnchor(region, height / 2);
+		AnchorPane.setBottomAnchor(region, height / 2);
+		
 	}
+	/*
 	public void setUpWeekDaysPane() {
 		weekDaysPane.getChildren().clear();
 		AnchorPane dummyPane1 = new AnchorPane();
 		Region dummyRegion1 = new Region();
 		dummyPane1.setPrefSize(70, 25);
-		centerInAnchorPane(dummyRegion1, dummyPane1);
+		centerInAnchorPane(dummyRegion1, 70, 25);
 		dummyPane1.getChildren().add(dummyRegion1);
 		
 		weekDaysPane.getChildren().add(dummyPane1);
@@ -395,7 +431,7 @@ public class MainWindow implements EventHandler<ActionEvent> {
 			AnchorPane labelPane = new AnchorPane();
 			Label dayLabel = new Label(days[i]);
 			labelPane.setPrefSize(70, 25);
-			centerInAnchorPane(dayLabel, labelPane);
+			centerInAnchorPane(dayLabel, 70, 25);
 			labelPane.getChildren().add(dayLabel);
 			//dayLabel.setPadding(new Insets(50, 0, 0, 40));
 			weekDaysPane.getChildren().add(labelPane);
@@ -403,11 +439,12 @@ public class MainWindow implements EventHandler<ActionEvent> {
 		AnchorPane dummyPane2 = new AnchorPane();
 		Region dummyRegion2 = new Region();
 		dummyPane2.setPrefSize(70, 25);
-		centerInAnchorPane(dummyRegion2, dummyPane2);
+		centerInAnchorPane(dummyRegion2, 70, 25);
 		dummyPane2.getChildren().add(dummyRegion2);
 
 		weekDaysPane.getChildren().add(dummyPane2);
 	}
+	*/
 
 	public void setUpCurrentFocusPane(String type, LocalDate date) {
 		currentFocusPane.getChildren().clear();
@@ -415,11 +452,12 @@ public class MainWindow implements EventHandler<ActionEvent> {
 		currentFocusPane.getStyleClass().add("currentDatePanel");
 		currentFocusPane.setAlignment(Pos.CENTER_LEFT);
 		
-		radioButtons.setPrefSize(115, 75);
+		radioButtons.setPrefSize(115, 100);
 		radioButtons.getStyleClass().clear();
 		radioButtons.getStyleClass().add("radioButtons");
 		radioButtons.setAlignment(Pos.CENTER_LEFT);
 		
+		int startYear = date.getYear();
 		Month startMonth = date.getMonth();
 		int dayOfWeek = date.getDayOfWeek().getValue();
 		LocalDate startOfWeek = date.minusDays(dayOfWeek);
@@ -433,6 +471,8 @@ public class MainWindow implements EventHandler<ActionEvent> {
 			currentlyFocusedDate = new Label("Week starting: " + startOfWeek.toString());
 		}else if (type.equals("Month")) {
 			currentlyFocusedDate = new Label("Month: " + startMonth.toString().substring(0, 1) + startMonth.toString().substring(1).toLowerCase() + " " + date.getYear());
+		}else if (type.equals("Year")) {
+			currentlyFocusedDate = new Label("Year: " + startYear);
 		}else {
 			currentlyFocusedDate = new Label("");
 		}
@@ -442,6 +482,9 @@ public class MainWindow implements EventHandler<ActionEvent> {
 		
 		
 		currentFocusPane.getChildren().addAll(radioButtons, currentlyFocusedDate, navButtons);
+		//currentFocusPane.applyCss();
+		//currentFocusPane.layout();
+		//System.out.println("navButtons width: " + navButtons.getWidth());
 		/*
 		 * Here put the currently focused week and month, and put the days within the calendar again like
 		 * they are in the month view
