@@ -239,7 +239,7 @@ public class MainWindow implements EventHandler<ActionEvent> {
 		//setUpWeekDaysPane();
 		//GridPane.setConstraints(weekDaysPane, 1, 2);
 
-		calendar = new CalendarView(windowController, nodeContainer, 700);
+		calendar = new CalendarView(windowController, nodeContainer, currentDatePointer, 700);
 		//calendar.setUpDefaultView();
 		GridPane.setConstraints(calendar, 1, 2, 1, 2);
 		
@@ -378,6 +378,8 @@ public class MainWindow implements EventHandler<ActionEvent> {
 					} else if (YMWSelection.getSelectedToggle() == weekSelection) {
 						calendar.addAllocatedWorkout(newNode, "Week");
 
+					} else if (YMWSelection.getSelectedToggle() == yearSelection) {
+						calendar.addAllocatedWorkout(newNode, "Year");
 					}
 					
 				}

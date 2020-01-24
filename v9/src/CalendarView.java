@@ -1,5 +1,6 @@
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.stage.Stage;
@@ -24,27 +25,33 @@ import java.util.*;
 
 public class CalendarView extends GridPane {
 	
-	private GridPane calendarGrid, intermediateGrid;
+	private Label currentlyFocusedDateLabel;
+	private Button nextButton, previousButton;
+	private GridPane calendarGrid;
 	private ScrollPane scrollPane;
-	private HBox horizontalAxisLabelPane;
-	private VBox verticalAxisLabelPane;
+	private StackPane paneForViewTypeSelection;
+	private HBox horizontalAxisLabelPane, currentFocusPane;
+	private VBox verticalAxisLabelPane, currentFocusWithSeparators;
 	private BorderPane borderPane;
+	private ChoiceBox<String> viewTypeSelection;
+	private String currentViewType;
 	private WindowController windowController;
 	private ArrayList<DateSlot> allDateSlots;
 	//private ArrayList<DateNode> allocatedDateNodes;
 	private DateNodeContainer dateNodeContainer;
 
 	//private ArrayList<DateNode> changedNodes;
-	private LocalDate defaultDate, calendarStartDate, startDate;
+	private LocalDate defaultDate, calendarStartDate, startDate, currentlyFocusedDate;
 	private DateTimeFormatter dtf;
 	private double calendarWidth, edgeWidth, dateSlotWidth, dateSlotHeight;
 	
 	
 	
-	public CalendarView(WindowController windowController, DateNodeContainer dateNodeContainer, double calendarWidth) {
+	public CalendarView(WindowController windowController, DateNodeContainer dateNodeContainer, LocalDate currentlyFocusedDate, double calendarWidth) {
 		//calendarWidth -= 100;
 		this.windowController = windowController;
 		this.dateNodeContainer = dateNodeContainer;
+		this.currentlyFocusedDate = currentlyFocusedDate;
 		this.calendarWidth = calendarWidth;
 		this.edgeWidth = calendarWidth / 9;
 		//this.paddingForVScroll = 10;
@@ -56,6 +63,78 @@ public class CalendarView extends GridPane {
 		
 		dtf = DateTimeFormatter.ofPattern("dd/MM//yyyy");
 		defaultDate.format(dtf);
+		
+		currentFocusWithSeparators = new VBox();
+		currentFocusWithSeparators.setPrefWidth(calendarWidth);
+		
+		currentFocusPane = new HBox(); // eventually implement this so that calendar has nav panel
+		currentFocusPane.setPrefSize(calendarWidth, 75);
+		currentFocusPane.setAlignment(Pos.CENTER_LEFT);
+		GridPane.setConstraints(currentFocusPane, 0, 0);
+		
+		paneForViewTypeSelection = new StackPane();
+		paneForViewTypeSelection.setPrefSize(edgeWidth, 75);
+		
+		currentViewType = "Week"; // default viewType
+		viewTypeSelection = new ChoiceBox<String>();
+		viewTypeSelection.getItems().addAll("Week", "Month", "Year");
+		viewTypeSelection.setValue("Week");
+		viewTypeSelection.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+			@Override
+			public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
+				
+				//System.out.println(WMYSelection.getItems().get((Integer) number2));
+				currentViewType = viewTypeSelection.getValue();
+				setUpView(viewTypeSelection.getItems().get((Integer) number2).toString(), currentlyFocusedDate);
+			}
+		});
+		
+		
+		paneForViewTypeSelection.getChildren().add(viewTypeSelection);
+		
+		currentlyFocusedDateLabel = new Label("");
+		currentlyFocusedDateLabel.setPrefSize(200, 75);
+		currentlyFocusedDateLabel.setPadding(new Insets(0, 0, 0, 25));
+		
+		previousButton = new Button("<< ");
+		previousButton.setOnAction(e -> {
+			if (currentViewType.equals("Week")) {
+				currentlyFocusedDate.minusDays(7);
+				
+			}else if (currentViewType.equals("Month")) {
+				currentlyFocusedDate.minusMonths(1);
+				
+			}else if (currentViewType.equals("Year")) {
+				currentlyFocusedDate.minusYears(1);
+			}
+			
+			
+		});
+		
+		nextButton = new Button(" >>");
+		nextButton.setOnAction(e -> {
+			if (currentViewType.equals("Week")) {
+				currentlyFocusedDate.plusDays(7);
+				
+			}else if (currentViewType.equals("Month")) {
+				currentlyFocusedDate.plusMonths(1);
+				
+			}else if (currentViewType.equals("Year")) {
+				currentlyFocusedDate.plusYears(1);
+			}
+			
+		});
+		
+		currentFocusPane.getChildren().addAll(paneForViewTypeSelection, currentlyFocusedDateLabel);
+		
+		Separator horizontalSep1 = new Separator(Orientation.HORIZONTAL);
+		Separator horizontalSep2 = new Separator(Orientation.HORIZONTAL);
+		
+		currentFocusWithSeparators.getChildren().addAll(horizontalSep1, currentFocusPane, horizontalSep2);
+		
+		horizontalAxisLabelPane = new HBox();
+		horizontalAxisLabelPane.setPrefSize(calendarWidth, 30);
+		GridPane.setConstraints(horizontalAxisLabelPane, 0, 1);
 		
 		scrollPane = new ScrollPane();
 		scrollPane.setPrefSize(calendarWidth, 275);
@@ -74,15 +153,12 @@ public class CalendarView extends GridPane {
 		
 		
 		
-		GridPane.setConstraints(scrollPane, 0, 1);
+		GridPane.setConstraints(scrollPane, 0, 2);
 		
-		horizontalAxisLabelPane = new HBox();
-		horizontalAxisLabelPane.setPrefWidth(calendarWidth);
-		horizontalAxisLabelPane.setPrefHeight(30);
-		GridPane.setConstraints(horizontalAxisLabelPane, 0, 0);
+		
 		
 		//this.setPadding(new Insets(10, 10, 10, 10));
-		this.getChildren().addAll(horizontalAxisLabelPane, scrollPane);
+		this.getChildren().addAll(currentFocusWithSeparators, horizontalAxisLabelPane, scrollPane);
 
 		
 		
@@ -100,20 +176,27 @@ public class CalendarView extends GridPane {
 		return this.allDateSlots;
 	}
 
-	public void addHorizontalSpace(int startRow, int cols, double width) {
-		for (int i = 0; i < cols; i ++) {
-			Region dummyRegion = new Region();
-			dummyRegion.setPrefSize(width, 30);
-			calendarGrid.add(dummyRegion, i + 1, startRow);
+	public void setUpCurrentFocusPane(String type) {
+		
+		int startYear = currentlyFocusedDate.getYear();
+		Month startMonth = currentlyFocusedDate.getMonth();
+		int dayOfWeek = currentlyFocusedDate.getDayOfWeek().getValue();
+		LocalDate startOfWeek = currentlyFocusedDate.minusDays(dayOfWeek);
+		
+
+		
+		if (type.equals("Week")) {
+			currentlyFocusedDateLabel.setText("Week starting: " + startOfWeek.toString()); 
+		}else if (type.equals("Month")) {
+			currentlyFocusedDateLabel.setText("Month: " + startMonth.toString().substring(0, 1) + startMonth.toString().substring(1).toLowerCase() + " " + currentlyFocusedDate.getYear());
+		}else if (type.equals("Year")) {
+			currentlyFocusedDateLabel.setText("Year: " + startYear);
+		}else {
+			currentlyFocusedDateLabel.setText("");
 		}
-	}
-	public void addVerticalSpace(int startCol, int rows, int height) {
-		for (int i = 0; i < rows; i ++) {
-			Region dummyRegion = new Region();
-			dummyRegion.setPrefSize(edgeWidth, height);
-			calendarGrid.add(dummyRegion, startCol, i + 1);
-			
-		}
+		
+		
+
 	}
 	public void setUpHorizontalAxisLabels(String type) {
 		ArrayList<String> labels;
@@ -229,17 +312,19 @@ public class CalendarView extends GridPane {
 			
 			setUpWeekView();
 			setUpHorizontalAxisLabels("Week");
+			setUpCurrentFocusPane("Week");
 			
 		}else if (type.equals("Month")) {
 			
 			setUpMonthView();
 			setUpHorizontalAxisLabels("Month");
-			
+			setUpCurrentFocusPane("Month");
 			
 		} else if (type.equals("Year")) {
 			
 			setUpYearView();
 			setUpHorizontalAxisLabels("Year");
+			setUpCurrentFocusPane("Year");
 		}
 
 	}
@@ -423,6 +508,14 @@ public class CalendarView extends GridPane {
 				
 				if (ds.getDate().equals(workoutDate)) {
 					//System.out.println("DATE FOUND : " + ds.getDate() + " workoutDate = " + workoutDate);
+					ds.getChildren().add(dn);
+					Tooltip.uninstall(ds, null);
+					if (dateNodeContainer.getAllocatedNodes().contains(dn) == false) {
+						dateNodeContainer.addToAllocatedNodes(dn);
+					}
+				}
+			}else if (type.equals("Year")) {
+				if (ds.getDate().equals(workoutDate)) {
 					ds.getChildren().add(dn);
 					Tooltip.uninstall(ds, null);
 					if (dateNodeContainer.getAllocatedNodes().contains(dn) == false) {
