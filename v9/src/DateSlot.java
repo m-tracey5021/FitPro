@@ -1,6 +1,7 @@
 import javafx.scene.layout.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 
@@ -8,10 +9,11 @@ import javafx.event.EventHandler;
 import javafx.scene.*;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.DragEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 
-public class DateSlot extends AnchorPane {
+public class DateSlot extends StackPane {
 	
 	private LocalDate date;
 	private LocalTime time;
@@ -26,6 +28,9 @@ public class DateSlot extends AnchorPane {
 	}
 	public LocalTime getTime() {
 		return this.time;
+	}
+	public LocalDateTime getDateTime() {
+		return this.date.atTime(this.time);
 	}
 	public boolean getIsPassed() {
 		return this.isPassed;
@@ -62,6 +67,11 @@ public class DateSlot extends AnchorPane {
 		
 		DateSlot dateSlot = this;
 		//System.out.println(date);
+		dateSlot.setOnMouseClicked(new EventHandler<MouseEvent>() {
+			public void handle(MouseEvent event) {
+				
+			}
+		});
 		
 		dateSlot.setOnDragOver(new EventHandler <DragEvent>() {
             public void handle(DragEvent event) {
@@ -138,9 +148,12 @@ public class DateSlot extends AnchorPane {
 	                	
 	                	DateNode newNode = new DateNode(oldNode.getWorkout());
 	                	nodeContainer.addToAllNodes(newNode);
+	                	newNode.setPrefSize(dateSlot.getWidth(), dateSlot.getHeight());
 	                	newNode.getWorkout().setDate(date);
 	                	newNode.getWorkout().setTime(time);
 	                	newNode.getWorkout().getParentCycle().sortWorkouts();
+	                	//System.out.println(newNode.getWorkout().getDate());
+	                	//System.out.println(newNode.getWorkout().getParentCycle().getWorkouts());
 	                	nodeContainer.resetAllPopups();
 	                	nodeContainer.resetAllLabels();
 	                	newNode.makeDraggable(windowController);

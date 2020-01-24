@@ -119,10 +119,12 @@ public class MainWindow implements EventHandler<ActionEvent> {
 				if (!(g1.getChildren().contains(calendar))) {
 					g1.getChildren().add(calendar);
 				}
-				
-				pickCalendarView(currentDatePointer);
-				previousButton.setDisable(false);
-				nextButton.setDisable(false);
+				calendar.setCurrentlyFocusedDate(currentDatePointer);
+				calendar.setCurrentViewType("Week");
+				calendar.setUpView();
+				//pickCalendarView(currentDatePointer);
+				//previousButton.setDisable(false);
+				//nextButton.setDisable(false);
 				saveButton.setDisable(false);
 				resetAllButton.setDisable(false);
 
@@ -174,7 +176,8 @@ public class MainWindow implements EventHandler<ActionEvent> {
 		
 
 		radioButtons.getChildren().addAll(yearSelection, monthSelection, weekSelection);
-
+		
+		/*
 		previousButton = new Button("<< ");
 		previousButton.setOnAction(e -> {
 			if (YMWSelection.getSelectedToggle() == monthSelection) {
@@ -208,11 +211,11 @@ public class MainWindow implements EventHandler<ActionEvent> {
 			}
 			
 		});
-		nextButton.setDisable(true);
+		nextButton.setDisable(true);*/
 
 		navButtons = new HBox(25);
 		navButtons.setAlignment(Pos.CENTER);
-		navButtons.getChildren().addAll(previousButton, nextButton);
+		//navButtons.getChildren().addAll(previousButton, nextButton);
 		
 		//GridPane.setConstraints(topRightPane, 1, 1, 1, 1, HPos.CENTER, VPos.CENTER);
 
@@ -225,7 +228,7 @@ public class MainWindow implements EventHandler<ActionEvent> {
 			public void changed(ObservableValue<? extends Toggle> value, Toggle oldTog, Toggle newTog) {
 				readyDate();
 				if (selectedCycle != null) { // if cycle is selected
-					pickCalendarView(currentDatePointer); // startDate must be set by this point under the cycle selection button
+					//pickCalendarView(currentDatePointer); // startDate must be set by this point under the cycle selection button
 				}else { // if no cycle selected
 					//setUpDefaultView();
 				}
@@ -239,7 +242,7 @@ public class MainWindow implements EventHandler<ActionEvent> {
 		//setUpWeekDaysPane();
 		//GridPane.setConstraints(weekDaysPane, 1, 2);
 
-		calendar = new CalendarView(windowController, nodeContainer, 700);
+		calendar = new CalendarView(windowController, nodeContainer, currentDatePointer, 700);
 		//calendar.setUpDefaultView();
 		GridPane.setConstraints(calendar, 1, 2, 1, 2);
 		
@@ -267,14 +270,18 @@ public class MainWindow implements EventHandler<ActionEvent> {
 			readyCycles();
 			readyDate();
 			//System.out.println(currentDatePointer);
-			pickCalendarView(currentDatePointer);
+			calendar.setCurrentlyFocusedDate(currentDatePointer);
+			calendar.setCurrentViewType("Week");
+			calendar.setUpView();
 		});
 		saveButton.setDisable(true);
 
 		resetAllButton = new Button("Reset All");
 		resetAllButton.setOnAction(e -> {
 			resetAll(selectedCycle);
-			pickCalendarView(defaultDate);
+			calendar.setCurrentlyFocusedDate(defaultDate);
+			calendar.setCurrentViewType("Week");
+			calendar.setUpView();
 		});
 		resetAllButton.setDisable(true);
 
@@ -336,7 +343,7 @@ public class MainWindow implements EventHandler<ActionEvent> {
 		g1.getChildren().add(defaultView);
 	}
 	
-	
+	/*
 	public void pickCalendarView(LocalDate date) {
 		if (YMWSelection.getSelectedToggle() == yearSelection) {
 			setUpCurrentFocusPane("Year", date);
@@ -352,15 +359,18 @@ public class MainWindow implements EventHandler<ActionEvent> {
 			setUpWorkoutsView();
 
 		}
-	}
+	}*/
 
 	public void setUpWorkoutsView() {
 		workoutsView.getChildren().clear();
 		nodeContainer.resetAllNodes();
 		nodeContainer.resetAllocatedNodes();
+		ArrayList<DateNode> nullNodes = new ArrayList<DateNode>();
+		ArrayList<DateNode> nonNullNodes = new ArrayList<DateNode>();
 		if (selectedCycle != null) {
 			selectedCycle.sortWorkouts();
 			for (Workout w : selectedCycle.getWorkouts()) {
+
 				//System.out.println("workout number: " + w.getWorkoutNumber());
 				//System.out.println("parent cycle: " + w.getParentCycle());
 				DateNode newNode = new DateNode(w);
@@ -369,20 +379,17 @@ public class MainWindow implements EventHandler<ActionEvent> {
 				newNode.makeDraggable(windowController);
 				
 				
-				if (w.getDate() == null) { // if no allocated date, add the node to the workoutsView
-					workoutsView.getChildren().add(newNode);
+				if (w.getDate() != null) { // if no allocated date, add the node to the workoutsView
+					nonNullNodes.add(newNode);
 				} else { // else add it to the calendar in its place
 					//System.out.println("WORKOUT HAS DATE");
-					if (YMWSelection.getSelectedToggle() == monthSelection) {
-						calendar.addAllocatedWorkout(newNode, "Month");
-					} else if (YMWSelection.getSelectedToggle() == weekSelection) {
-						calendar.addAllocatedWorkout(newNode, "Week");
-
-					}
+					nullNodes.add(newNode);
 					
 				}
 
 			}
+			workoutsView.getChildren().addAll(nullNodes);
+			calendar.addAllocatedEvents(nonNullNodes);
 			calendar.scrollToFirstWorkout();
 			
 		}

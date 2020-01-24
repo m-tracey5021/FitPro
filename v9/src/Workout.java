@@ -1,4 +1,5 @@
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
 
@@ -67,6 +68,9 @@ public class Workout implements CycleComponent {
 	}
 	public LocalTime getTime() {
 		return this.time;
+	}
+	public LocalDateTime getDateTime() {
+		return this.date.atTime(this.time);
 	}
 	public void generateNewId() {
 		this.workoutId = UUID.randomUUID().toString();

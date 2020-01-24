@@ -16,7 +16,7 @@ import javafx.scene.paint.*;
 
 
 
-public class DateNode extends AnchorPane {
+public class DateNode extends StackPane {
 	
 	private Workout workout;
 	private Label label;
@@ -37,13 +37,13 @@ public class DateNode extends AnchorPane {
 			labelStr = "Workout " + workout.getWorkoutNumber();
 		}
 		label = new Label(labelStr);
-		label.setMaxWidth(Double.MAX_VALUE);
+		/*label.setMaxWidth(Double.MAX_VALUE);
 		AnchorPane.setLeftAnchor(label, 0.0);
 		AnchorPane.setRightAnchor(label, 0.0);
 		AnchorPane.setTopAnchor(label, 0.0);
-		AnchorPane.setBottomAnchor(label, 0.0);
+		AnchorPane.setBottomAnchor(label, 0.0);*/
 		label.getStyleClass().add("dateNodeLabel");
-		label.setAlignment(Pos.CENTER);
+		//label.setAlignment(Pos.CENTER);
 		
 		this.getChildren().add(label);
 	}
@@ -63,13 +63,13 @@ public class DateNode extends AnchorPane {
 			labelStr = "Workout " + workout.getWorkoutNumber();
 		}
 		label = new Label(labelStr);
-		label.setMaxWidth(Double.MAX_VALUE);
-		AnchorPane.setLeftAnchor(label, 0.0);
-		AnchorPane.setRightAnchor(label, 0.0);
-		AnchorPane.setTopAnchor(label, 0.0);
-		AnchorPane.setBottomAnchor(label, 0.0);
+		//label.setMaxWidth(Double.MAX_VALUE);
+		//AnchorPane.setLeftAnchor(label, 0.0);
+		//AnchorPane.setRightAnchor(label, 0.0);
+		//AnchorPane.setTopAnchor(label, 0.0);
+		//AnchorPane.setBottomAnchor(label, 0.0);
 		label.getStyleClass().add("dateNodeLabel");
-		label.setAlignment(Pos.CENTER);
+		//label.setAlignment(Pos.CENTER);
 		
 		this.getChildren().add(label);
 	}
@@ -92,13 +92,13 @@ public class DateNode extends AnchorPane {
 			labelStr = "Workout " + workout.getWorkoutNumber();
 		}
 		label = new Label(labelStr);
-		label.setMaxWidth(Double.MAX_VALUE);
-		AnchorPane.setLeftAnchor(label, 0.0);
-		AnchorPane.setRightAnchor(label, 0.0);
-		AnchorPane.setTopAnchor(label, 0.0);
-		AnchorPane.setBottomAnchor(label, 0.0);
+		//label.setMaxWidth(Double.MAX_VALUE);
+		//AnchorPane.setLeftAnchor(label, 0.0);
+		//AnchorPane.setRightAnchor(label, 0.0);
+		//AnchorPane.setTopAnchor(label, 0.0);
+		//AnchorPane.setBottomAnchor(label, 0.0);
 		label.getStyleClass().add("dateNodeLabel");
-		label.setAlignment(Pos.CENTER);
+		//label.setAlignment(Pos.CENTER);
 		this.getChildren().add(label);
 	}
 	public void addPopup() {
