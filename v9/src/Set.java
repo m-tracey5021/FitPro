@@ -1,6 +1,6 @@
 import java.util.*;
 
-public class Set implements CycleComponent {
+public class Set extends CycleObject{
 	private String setId;
 	private Movement parentMovement;
 	private int reps;

@@ -1,8 +1,9 @@
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
 
-public class Workout implements CycleComponent {
+public class Workout extends CycleObject {
 	private String workoutId;
 	private int workoutNumber;
 	
@@ -68,6 +69,14 @@ public class Workout implements CycleComponent {
 	public LocalTime getTime() {
 		return this.time;
 	}
+	public LocalDateTime getDateTime() {
+		if (date != null & time != null) {
+			return this.date.atTime(this.time);
+		}else {
+			return null;
+		}
+		
+	}
 	public void generateNewId() {
 		this.workoutId = UUID.randomUUID().toString();
 	}
@@ -100,7 +109,15 @@ public class Workout implements CycleComponent {
 	 * public void addSet(Set s) { sets.add(s); } public ArrayList<Set> getSets(){
 	 * return sets; }
 	 */
-	
+	public String basicToString() {
+		String result = "";
+		if (workoutNumber == 0) {
+			result = "Unallocated Workout";
+		}else {
+			result = "Workout " + workoutNumber + ": " ;
+		}
+		return result;
+	}
 	@Override
 	public String toString() {
 		String result = "";

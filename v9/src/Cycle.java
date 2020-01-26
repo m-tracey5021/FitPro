@@ -1,8 +1,9 @@
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
 
-public class Cycle implements CycleComponent {
+public class Cycle extends CycleObject {
 	private String ownerId;
 	private String cycleId;
 	private String cycleName;
@@ -165,9 +166,9 @@ public class Cycle implements CycleComponent {
 			
 		}
 		Workout earliestWorkout;
-		LocalDate earliestDate;
+		LocalDateTime earliestDateTime;
 		LocalTime earliestTime;
-		LocalDate comparedDate;
+		LocalDateTime comparedDateTime;
 		LocalTime comparedTime;
 		done = false;
 		while (done == false) {
@@ -178,12 +179,10 @@ public class Cycle implements CycleComponent {
 				
 				 // chose random workout to compare to before loop starts
 				for (Workout w : workouts) {
-					comparedDate = w.getDate();
-					comparedTime = w.getTime();
-					earliestDate = earliestWorkout.getDate();
-					earliestTime = earliestWorkout.getTime();
-					
-					if (comparedDate.isBefore(earliestDate) & comparedTime.isBefore(earliestTime)) {
+					comparedDateTime = w.getDate().atTime(w.getTime());
+					earliestDateTime = earliestWorkout.getDate().atTime(earliestWorkout.getTime());
+
+					if (comparedDateTime.isBefore(earliestDateTime)) {
 						earliestWorkout = w;
 					}
 					

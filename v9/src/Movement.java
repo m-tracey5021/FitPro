@@ -1,7 +1,7 @@
 
 import java.util.*;
 
-public class Movement implements CycleComponent {
+public class Movement extends CycleObject {
 	
 	private String movementId;
 	private Workout parentWorkout;
