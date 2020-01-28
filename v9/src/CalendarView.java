@@ -357,6 +357,8 @@ public class CalendarView extends GridPane {
 
 		setUpVerticalAxisLabels("Week", 24);
 		
+		double x = 0.0;
+		double y = 0.0;
 		for (int i = 0; i < 7; i ++) {
 			for (int j = 0; j < 24; j ++) {
 				
@@ -365,17 +367,21 @@ public class CalendarView extends GridPane {
 				thisDate.format(dtf);
 
 				DateSlot dateSlot = initDateSlot(thisDate, thisTime);
-				calendarGrid.add(dateSlot, i, j);
-
+				//calendarGrid.add(dateSlot, i, j);
+				dateSlot.relocate(x, y);
+				overlayPane.getChildren().add(dateSlot);
+				y += dateSlotHeight;
 			}
+			x += dateSlotWidth;
+			y = 0.0;
 		}
 		
 		
 		//overlayPane.getChildren().add(new Rectangle(10, 10, 10, 10));
 		//overlayStack.getChildren().addAll(calendarGrid, overlayPane);
 		//borderPane.setCenter(overlayStack);
-		
-		borderPane.setCenter(calendarGrid);
+		borderPane.setCenter(overlayPane);
+		//borderPane.setCenter(calendarGrid);
 		
 
 	}
@@ -405,30 +411,46 @@ public class CalendarView extends GridPane {
 		int col = 1;
 		int row = 1;
 		
+		double x = 0.0;
+		double y = 0.0;
+		
 		for (int i = 0; i < numberOfDateNodes; i ++) {
 			
 			if (i < (startDay - 1)) {
 				Region dummyRegion = new Region();
-				dummyRegion.setPrefSize(dateSlotWidth, 30);
-				calendarGrid.add(dummyRegion, col, row);
-				col ++;
+				dummyRegion.setPrefSize(dateSlotWidth, dateSlotHeight);
+				dummyRegion.relocate(x, y);
+				overlayPane.getChildren().add(dummyRegion);
+				//calendarGrid.add(dummyRegion, col, row);
+				//col ++;
+				x += dateSlotWidth;
 			}else {
 				LocalDate thisDate = calendarStartDate.plusDays(i - startDay + 1);
 				LocalTime thisTime = LocalTime.NOON;
 				thisDate.format(dtf);
 				
 				DateSlot dateSlot = initDateSlot(thisDate, thisTime);
-				calendarGrid.add(dateSlot, col, row);
+				dateSlot.relocate(x, y);
+				//calendarGrid.add(dateSlot, col, row);
+				overlayPane.getChildren().add(dateSlot);
 				
+				
+				x += dateSlotWidth;
+				if (x == dateSlotWidth * 7) {
+					x = 0.0;
+					y += dateSlotHeight;
+				}
+				/*
 				col ++;
 				if (col == 8) {
 					col = 1;
 					row ++;
 				}
+				*/
 			}	
 		}
 
-		borderPane.setCenter(calendarGrid);
+		borderPane.setCenter(overlayPane);
 	}
 	
 	public void setUpYearView() {
@@ -449,6 +471,9 @@ public class CalendarView extends GridPane {
 			lengthsOfMonths.add(lengthOfMonth);
 			pointerDate = pointerDate.plusMonths(1);
 		}
+		
+		double x = 0.0;
+		double y = 0.0; 
 
 		setUpVerticalAxisLabels("Year", 31);
 		int dateCounter = 0;
@@ -461,15 +486,18 @@ public class CalendarView extends GridPane {
 				thisDate.format(dtf);
 				
 				DateSlot dateSlot = initDateSlot(thisDate, thisTime);
-				calendarGrid.add(dateSlot, i + 1, j + 1);
-				
+				dateSlot.relocate(x, y);
+				overlayPane.getChildren().add(dateSlot);
+				//calendarGrid.add(dateSlot, i + 1, j + 1);
+				y += dateSlotHeight;
 				dateCounter ++;
 				
 			}
-			
+			x += dateSlotWidth;
+			y = 0.0;
 		}
 
-		borderPane.setCenter(calendarGrid);
+		borderPane.setCenter(overlayPane);
 
 	}
 	

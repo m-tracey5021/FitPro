@@ -73,8 +73,22 @@ public class DateSlot extends StackPane {
 				if (event.getButton() == MouseButton.SECONDARY) {
 					ContextMenu menu = new ContextMenu();
 					MenuItem createNewWorkoutItem = new MenuItem("Add new Workout");
-					MenuItem allocateExistingWorkout = new MenuItem("Allocate existing Workout");
-					menu.getItems().addAll(createNewWorkoutItem, allocateExistingWorkout);
+					menu.getItems().add(createNewWorkoutItem);
+					if (nodeContainer.getAllNodes().size() != 0) {
+						Menu allocateExistingWorkout = new Menu("Allocate existing Workout");
+						for (DateNode dateNode: nodeContainer.getAllNodes()) {
+							Workout workout = dateNode.getWorkout();
+							MenuItem workoutItem = new MenuItem(workout.basicToString());
+							allocateExistingWorkout.getItems().add(workoutItem);
+							//System.out.println(dateNode);
+							allocateExistingWorkout.setOnAction(e -> {
+								
+							});
+						}
+						menu.getItems().add(allocateExistingWorkout);
+					}
+					
+					
 					dateSlot.setOnContextMenuRequested(e -> {
 						menu.show(dateSlot, e.getScreenX(), e.getScreenY());
 					});
