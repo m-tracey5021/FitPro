@@ -28,10 +28,10 @@ public class CalendarView extends GridPane {
 	private Label currentlyFocusedDateLabel;
 	private Button nextButton, previousButton;
 	private GridPane calendarGrid;
-	private Pane overlayPane;
+	private Pane calendarPane;
 	private ScrollPane scrollPane;
 	private StackPane paneForViewTypeSelection, overlayStack;
-	private HBox horizontalAxisLabelPane, currentFocusPane;
+	private HBox horizontalAxisLabelPane, currentFocusPane, navButtons;
 	private VBox verticalAxisLabelPane, currentFocusWithSeparators;
 	private BorderPane borderPane;
 	private ChoiceBox<String> viewTypeSelection;
@@ -39,18 +39,23 @@ public class CalendarView extends GridPane {
 	private WindowController windowController;
 	private ArrayList<DateSlot> allDateSlots;
 	//private ArrayList<DateNode> allocatedDateNodes;
-	private DateNodeContainer dateNodeContainer;
+	//private DateNodeContainer dateNodeContainer;
+	private ArrayList<Workout> workouts;
+	private Cycle selectedCycle;
 
 	//private ArrayList<DateNode> changedNodes;
 	private LocalDate defaultDate, calendarStartDate, startDate, currentlyFocusedDate;
 	private DateTimeFormatter dtf;
 	private double calendarWidth, edgeWidth, dateSlotWidth, dateSlotHeight;
+	private CalendarViewElementContainer elementContainer;
 	
 	
 	
-	public CalendarView(WindowController windowController, double calendarWidth) {
+	public CalendarView(double calendarWidth) {
 		//calendarWidth -= 100;
-		this.windowController = windowController;
+
+
+		
 		this.calendarWidth = calendarWidth;
 		this.edgeWidth = calendarWidth / 9;
 		//this.setGridLinesVisible(true);
@@ -83,9 +88,10 @@ public class CalendarView extends GridPane {
 				currentViewType = viewTypeSelection.getItems().get((Integer) newIndex);
 				System.out.println("picked from bx: " + viewTypeSelection.getItems().get((Integer) newIndex));
 				System.out.println("current: " + currentViewType);
-				setUpView();
+				setUpView(selectedCycle);
 			}
 		});
+		currentViewType = "Week";
 		
 		
 		paneForViewTypeSelection.getChildren().add(viewTypeSelection);
@@ -97,33 +103,38 @@ public class CalendarView extends GridPane {
 		previousButton = new Button("<< ");
 		previousButton.setOnAction(e -> {
 			if (currentViewType.equals("Week")) {
-				currentlyFocusedDate.minusDays(7);
+				currentlyFocusedDate = currentlyFocusedDate.minusDays(7);
+				System.out.println("after date change: " + currentlyFocusedDate);
 				
 			}else if (currentViewType.equals("Month")) {
-				currentlyFocusedDate.minusMonths(1);
+				currentlyFocusedDate = currentlyFocusedDate.minusMonths(1);
 				
 			}else if (currentViewType.equals("Year")) {
-				currentlyFocusedDate.minusYears(1);
+				currentlyFocusedDate = currentlyFocusedDate.minusYears(1);
 			}
-			
+			setUpView(selectedCycle);
 			
 		});
 		
 		nextButton = new Button(" >>");
 		nextButton.setOnAction(e -> {
 			if (currentViewType.equals("Week")) {
-				currentlyFocusedDate.plusDays(7);
+				currentlyFocusedDate = currentlyFocusedDate.plusDays(7);
 				
 			}else if (currentViewType.equals("Month")) {
-				currentlyFocusedDate.plusMonths(1);
+				currentlyFocusedDate = currentlyFocusedDate.plusMonths(1);
 				
 			}else if (currentViewType.equals("Year")) {
-				currentlyFocusedDate.plusYears(1);
+				currentlyFocusedDate = currentlyFocusedDate.plusYears(1);
 			}
-			
+			setUpView(selectedCycle);
 		});
 		
-		currentFocusPane.getChildren().addAll(paneForViewTypeSelection, currentlyFocusedDateLabel);
+		navButtons = new HBox(15);
+		navButtons.setAlignment(Pos.CENTER);
+		navButtons.getChildren().addAll(previousButton, nextButton);
+		
+		currentFocusPane.getChildren().addAll(paneForViewTypeSelection, currentlyFocusedDateLabel, navButtons);
 		
 		Separator horizontalSep1 = new Separator(Orientation.HORIZONTAL);
 		Separator horizontalSep2 = new Separator(Orientation.HORIZONTAL);
@@ -150,9 +161,11 @@ public class CalendarView extends GridPane {
 	public String getCurrentViewType() {
 		return this.currentViewType;
 	}
+	/*
 	public DateNodeContainer getDateNodeContainer() {
 		return this.dateNodeContainer;
 	}
+	*/
 	public ArrayList<DateSlot> getAllDateSlots(){
 		return this.allDateSlots;
 	}
@@ -162,8 +175,13 @@ public class CalendarView extends GridPane {
 	public void setCurrentViewType(String type) {
 		this.currentViewType = type;
 	}
+	/*
 	public void setDateNodeContainer(DateNodeContainer container) {
 		this.dateNodeContainer = container;
+	}
+	*/
+	public void setWorkouts(ArrayList<Workout> workouts) {
+		this.workouts = workouts;
 	}
 
 	public void setUpCurrentFocusPane() {
@@ -270,19 +288,32 @@ public class CalendarView extends GridPane {
 	}
 	
 	
-	public void setUpView() {
+	public void setUpView(Cycle selectedCycle) {
 		
 		//System.out.println("Passed startDate: " + startDate);
+		this.selectedCycle = selectedCycle;
+		System.out.println("setup triggered");
+		System.out.println(currentlyFocusedDate);
+		System.out.println(currentViewType);
+		//this.workouts = selectedCycle.getWorkouts();
+		//calendarPane.getChildren().clear();
 		
 		
+		calendarPane = new Pane();
+
 		
+		elementContainer = new CalendarViewElementContainer();
+		elementContainer.setCycle(selectedCycle);
+		elementContainer.setDateNodesByCycle();
+		elementContainer.setCalendarPane(calendarPane);
 		
-		allDateSlots = new ArrayList<DateSlot>();
-		calendarGrid = new GridPane();
+		//allDateSlots = new ArrayList<DateSlot>();
+		//calendarGrid = new GridPane();
 		//calendarGrid.setGridLinesVisible(true);
 		//calendarGrid.getStyleClass().add("scrollPane");
 		
 		borderPane = new BorderPane();
+		
 		HBox dummyHBox1 = new HBox();
 		HBox dummyHBox2 = new HBox();
 		dummyHBox1.setPrefHeight(30);
@@ -290,8 +321,7 @@ public class CalendarView extends GridPane {
 		borderPane.setTop(dummyHBox1);
 		borderPane.setBottom(dummyHBox2);
 		
-		overlayStack = new StackPane();
-		overlayPane = new Pane();
+		
 		//intermediateGrid.getStyleClass().add("scrollPane");
 		scrollPane.setContent(borderPane);
 		//scrollPane.getStyleClass().add("scrollPane");
@@ -302,44 +332,23 @@ public class CalendarView extends GridPane {
 			setUpWeekView();
 			setUpHorizontalAxisLabels();
 			setUpCurrentFocusPane();
-			addAllocatedEvents();
+			addNonNullWorkouts();
 			
 		}else if (currentViewType.equals("Month")) {
 			
 			setUpMonthView();
 			setUpHorizontalAxisLabels();
 			setUpCurrentFocusPane();
-			addAllocatedEvents();
+			addNonNullWorkouts();
 			
 		} else if (currentViewType.equals("Year")) {
 			
 			setUpYearView();
 			setUpHorizontalAxisLabels();
 			setUpCurrentFocusPane();
-			addAllocatedEvents();
+			addNonNullWorkouts();
 		}
 
-	}
-	public DateSlot initDateSlot(LocalDate thisDate, LocalTime thisTime) {
-		DateSlot dateSlot = new DateSlot();
-		LocalDateTime thisDateTime = thisDate.atTime(thisTime);
-		dateSlot.getStyleClass().add("dateSlot");
-		dateSlot.setPrefSize(dateSlotWidth, dateSlotHeight);
-		dateSlot.setDate(thisDate);
-		dateSlot.setTime(thisTime);
-		//dateSlot.getChildren().add(new Label("POOP"));
-		if (thisDateTime.isBefore(LocalDateTime.now())) {
-			
-			dateSlot.setIsPassed(true);
-			dateSlot.getStyleClass().clear();
-			dateSlot.getStyleClass().add("dateSlotPassed");
-		}
-		dateSlot.addPopup();
-		dateSlot.setUpDateSlot(windowController, dateNodeContainer);
-		if (allDateSlots.contains(dateSlot) == false) {
-			allDateSlots.add(dateSlot);
-		}
-		return dateSlot;
 	}
 	
 	public void setUpWeekView(){
@@ -365,11 +374,13 @@ public class CalendarView extends GridPane {
 				LocalDate thisDate = calendarStartDate.plusDays(i);
 				LocalTime thisTime = startTime.plusHours(j);
 				thisDate.format(dtf);
-
-				DateSlot dateSlot = initDateSlot(thisDate, thisTime);
+				
+				DateSlot dateSlot = new DateSlot(thisDate, thisTime, dateSlotWidth, dateSlotHeight, x, y, elementContainer);
+				
+				elementContainer.addDateSlot(dateSlot);
+				dateSlot.setUpDateSlot();
 				//calendarGrid.add(dateSlot, i, j);
-				dateSlot.relocate(x, y);
-				overlayPane.getChildren().add(dateSlot);
+				//dateSlot.relocate(x, y);
 				y += dateSlotHeight;
 			}
 			x += dateSlotWidth;
@@ -380,7 +391,7 @@ public class CalendarView extends GridPane {
 		//overlayPane.getChildren().add(new Rectangle(10, 10, 10, 10));
 		//overlayStack.getChildren().addAll(calendarGrid, overlayPane);
 		//borderPane.setCenter(overlayStack);
-		borderPane.setCenter(overlayPane);
+		borderPane.setCenter(calendarPane);
 		//borderPane.setCenter(calendarGrid);
 		
 
@@ -408,9 +419,6 @@ public class CalendarView extends GridPane {
 		
 		setUpVerticalAxisLabels("Month", (int)rows);
 		
-		int col = 1;
-		int row = 1;
-		
 		double x = 0.0;
 		double y = 0.0;
 		
@@ -420,7 +428,7 @@ public class CalendarView extends GridPane {
 				Region dummyRegion = new Region();
 				dummyRegion.setPrefSize(dateSlotWidth, dateSlotHeight);
 				dummyRegion.relocate(x, y);
-				overlayPane.getChildren().add(dummyRegion);
+				calendarPane.getChildren().add(dummyRegion);
 				//calendarGrid.add(dummyRegion, col, row);
 				//col ++;
 				x += dateSlotWidth;
@@ -429,10 +437,12 @@ public class CalendarView extends GridPane {
 				LocalTime thisTime = LocalTime.NOON;
 				thisDate.format(dtf);
 				
-				DateSlot dateSlot = initDateSlot(thisDate, thisTime);
-				dateSlot.relocate(x, y);
+				DateSlot dateSlot = new DateSlot(thisDate, thisTime, dateSlotWidth, dateSlotHeight, x, y, elementContainer);
+				
+				elementContainer.addDateSlot(dateSlot);
+				dateSlot.setUpDateSlot();
 				//calendarGrid.add(dateSlot, col, row);
-				overlayPane.getChildren().add(dateSlot);
+				//overlayPane.getChildren().add(dateSlot);
 				
 				
 				x += dateSlotWidth;
@@ -440,17 +450,10 @@ public class CalendarView extends GridPane {
 					x = 0.0;
 					y += dateSlotHeight;
 				}
-				/*
-				col ++;
-				if (col == 8) {
-					col = 1;
-					row ++;
-				}
-				*/
 			}	
 		}
 
-		borderPane.setCenter(overlayPane);
+		borderPane.setCenter(calendarPane);
 	}
 	
 	public void setUpYearView() {
@@ -485,9 +488,11 @@ public class CalendarView extends GridPane {
 				LocalTime thisTime = LocalTime.NOON;
 				thisDate.format(dtf);
 				
-				DateSlot dateSlot = initDateSlot(thisDate, thisTime);
-				dateSlot.relocate(x, y);
-				overlayPane.getChildren().add(dateSlot);
+				DateSlot dateSlot = new DateSlot(thisDate, thisTime, dateSlotWidth, dateSlotHeight, x, y, elementContainer);
+				
+				elementContainer.addDateSlot(dateSlot);
+				dateSlot.setUpDateSlot();
+				//overlayPane.getChildren().add(dateSlot);
 				//calendarGrid.add(dateSlot, i + 1, j + 1);
 				y += dateSlotHeight;
 				dateCounter ++;
@@ -497,10 +502,71 @@ public class CalendarView extends GridPane {
 			y = 0.0;
 		}
 
-		borderPane.setCenter(overlayPane);
+		borderPane.setCenter(calendarPane);
 
 	}
+	/*
+	public void readyNodes() {
+		if (selectedCycle != null) {
+			dateNodeContainer.resetAllNodes();
+			dateNodeContainer.resetAllocatedNodes();
+			for (Workout workout : selectedCycle.getWorkouts()) {
+				DateNode newNode = new DateNode(workout);
+				
+				newNode.addPopup();
+				newNode.makeDraggable(windowController);
+				if (workout.getDate() == null) {
+					dateNodeContainer.addToUnallocatedNodes(newNode);
+				}else {
+					dateNodeContainer.addToAllocatedNodes(newNode);
+				}
+				dateNodeContainer.addToAllNodes(newNode);
+			}
+		}
+	}
+	*/
 	
+	
+	
+	public void addNonNullWorkouts() {
+		if (elementContainer.getWorkouts() != null) {
+			for (Workout workout : elementContainer.getWorkouts()) {
+				if (workout.getDateTime() != null) {
+					LocalDate date = workout.getDate();
+					LocalTime time = workout.getTime();
+					DateNode nodeToAdd = elementContainer.getDateNodeByWorkout(workout);
+					for (DateSlot dateSlot : elementContainer.getDateSlots()) {
+						
+						if (workout.getDateTime().equals(dateSlot.getDateTime())) {
+							nodeToAdd.setSize(dateSlotWidth - 4, dateSlotHeight - 4);
+							nodeToAdd.setPos(dateSlot.getPos()[0] + 2, dateSlot.getPos()[1] + 2);
+							
+						}
+						/*
+						if (currentViewType.equals("Week")) {
+							if (workout.getDateTime().equals(dateSlot.getDateTime())) {
+								nodeToAdd.setPos(dateSlot.getPos()[0], dateSlot.getPos()[1]);
+							}
+						}else if (currentViewType.equals("Month")) {
+							if (workout.getDate().equals(dateSlot.getDate())) {
+
+							}
+						}else if (currentViewType.equals("Year")) {
+							if (workout.getDate().equals(dateSlot.getDate())) {
+
+							}
+						}
+						*/
+						
+					}
+					
+					calendarPane.getChildren().add(nodeToAdd);
+				}
+			}
+		}
+		
+	}
+	/*
 	public void addAllocatedEvents() {
 		for (DateNode node : dateNodeContainer.getAllNodes()) {
 			LocalDateTime workoutDateTime = node.getWorkout().getDateTime();
@@ -528,19 +594,28 @@ public class CalendarView extends GridPane {
 		
 		// allocate the node based on the date
 	}
-	public void addEventToDateSlot(DateSlot dateSlot, DateNode node) {
-		dateSlot.getChildren().add(node);
+	
+	*/
+	
+	
+	
+	
+	/*
+	public void addEventToDateSlot(DateSlot dateSlot, DateNode dateNode) {
+		dateSlot.getChildren().add(dateNode);
 		Tooltip.uninstall(dateSlot, null);
-		if (dateNodeContainer.getAllocatedNodes().contains(node) == false) {
-			dateNodeContainer.addToAllocatedNodes(node);
-		}
+		elementContainer.addDateNode(dateNode);
 		
 	}
+	*/
 	
 	//public void addAllocatedEvents(ArrayList<DateNode> nodes) {
 		
 	//}
 	
+	
+	
+	/*
 	public void scrollToFirstWorkout() {
 		//System.out.println("scrollTo fired");
 		this.applyCss();
@@ -565,21 +640,13 @@ public class CalendarView extends GridPane {
 		}
 		
 	}
+	*/
 	public void saveChanges(Cycle selectedCycle) {
-		if (dateNodeContainer.getAllocatedNodes().size() != 0) {
+		if (elementContainer.getNonNullDateNodes().size() != 0) {
 			SQLService sql = new SQLService();
-			LocalDate firstDate = dateNodeContainer.getAllocatedNodes().get(0).getWorkout().getDate();
-			LocalDate endDate = dateNodeContainer.getAllocatedNodes().get(dateNodeContainer.getAllocatedNodes().size() - 1).getWorkout().getDate();
-			for (DateNode node : dateNodeContainer.getAllocatedNodes()) {
-				Workout workout = node.getWorkout();
-				if (workout.getDate().isBefore(firstDate)) {
-					firstDate = workout.getDate();
-				}
-				if (workout.getDate().isAfter(endDate)) {
-					endDate = workout.getDate();
-				}
-				
-			}
+			LocalDate firstDate = elementContainer.getNonNullDateNodes().get(0).getWorkout().getDate();
+			LocalDate endDate = elementContainer.getNonNullDateNodes().get(elementContainer.getNonNullDateNodes().size() - 1).getWorkout().getDate();
+			
 			LocalDate dates[] = {firstDate, endDate};
 			selectedCycle.setDates(dates);
 			selectedCycle.sortWorkouts();

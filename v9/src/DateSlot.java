@@ -16,12 +16,40 @@ import javafx.scene.input.TransferMode;
 
 public class DateSlot extends StackPane {
 	
+	private CalendarViewElementContainer elementContainer;
 	private LocalDate date;
 	private LocalTime time;
+	private LocalDateTime dateTime;
+	private double width, height, xPos, yPos;
+	private Pane parentPane;
 	private boolean isPassed;
 	
 	public DateSlot(Node...children) {
 		super(children);
+	}
+	
+	public DateSlot(LocalDate thisDate, LocalTime thisTime, double width, double height, double xPos, double yPos, CalendarViewElementContainer elementContainer, Node...children) {
+		super(children);
+		this.getStyleClass().add("dateSlot");
+		
+		this.elementContainer = elementContainer;
+		this.date = thisDate;
+		this.time = thisTime;
+		this.dateTime = thisDate.atTime(thisTime);
+		this.width = width;
+		this.height = height;
+		this.setPrefSize(width, height);
+		//dateSlot.getChildren().add(new Label("POOP"));
+		if (this.dateTime.isBefore(LocalDateTime.now())) {
+			
+			this.isPassed = true;
+			this.getStyleClass().clear();
+			this.getStyleClass().add("dateSlotPassed");
+		}
+		this.addPopup();
+		this.setPos(xPos, yPos);
+		this.parentPane = elementContainer.getCalendarPane();
+		this.parentPane.getChildren().add(this);
 	}
 	
 	public LocalDate getDate() {
@@ -33,6 +61,10 @@ public class DateSlot extends StackPane {
 	public LocalDateTime getDateTime() {
 		return this.date.atTime(this.time);
 	}
+	public double[] getPos() {
+		double[] pos = {this.xPos, this.yPos};
+		return pos;
+	}
 	public boolean getIsPassed() {
 		return this.isPassed;
 	}
@@ -41,6 +73,11 @@ public class DateSlot extends StackPane {
 	}
 	public void setTime(LocalTime time) {
 		this.time = time;
+	}
+	public void setPos(double xPos, double yPos) {
+		this.xPos = xPos;
+		this.yPos = yPos;
+		this.relocate(xPos,  yPos);
 	}
 	public void setIsPassed(boolean isPassed) {
 		this.isPassed = isPassed;
@@ -64,26 +101,64 @@ public class DateSlot extends StackPane {
 	public String toString() {
 		return date.toString() + " " + time.toString();
 	}
-	public void setUpDateSlot(WindowController windowController, DateNodeContainer nodeContainer) {
+	public void setUpDateSlot() {
 		
 		DateSlot dateSlot = this;
+		
+		dateSlot.setOnMouseEntered(new EventHandler<MouseEvent>() {
+			public void handle(MouseEvent event) {
+				elementContainer.setLastEnteredDateSlot(dateSlot);
+			}
+		});
 		//System.out.println(date);
 		dateSlot.setOnMouseClicked(new EventHandler<MouseEvent>() {
 			public void handle(MouseEvent event) {
 				if (event.getButton() == MouseButton.SECONDARY) {
 					ContextMenu menu = new ContextMenu();
 					MenuItem createNewWorkoutItem = new MenuItem("Add new Workout");
+					createNewWorkoutItem.setOnAction(e -> {
+						
+					});
 					menu.getItems().add(createNewWorkoutItem);
-					if (nodeContainer.getAllNodes().size() != 0) {
+					if (elementContainer.getWorkouts() != null) {
 						Menu allocateExistingWorkout = new Menu("Allocate existing Workout");
-						for (DateNode dateNode: nodeContainer.getAllNodes()) {
-							Workout workout = dateNode.getWorkout();
-							MenuItem workoutItem = new MenuItem(workout.basicToString());
-							allocateExistingWorkout.getItems().add(workoutItem);
+						//nodeContainer.sortAllDateNodes();
+						
+						for (Workout workout: elementContainer.getWorkouts()) {
+							//Workout workout = dateNode.getWorkout();
+							
+							Menu workoutSubMenu = new Menu(workout.basicToString());
+							allocateExistingWorkout.getItems().add(workoutSubMenu);
 							//System.out.println(dateNode);
-							allocateExistingWorkout.setOnAction(e -> {
+							
+							String movementsStr = "";
+							for (Movement movement : workout.getMovements()) {
+								movementsStr += movement.fullToString() + "\n\n";
+							}
+							System.out.println(movementsStr);
+							MenuItem movementsItem = new MenuItem(movementsStr);
+							workoutSubMenu.getItems().add(movementsItem);
+							
+							movementsItem.setOnAction(e -> {
+								workout.setDate(date);
+								workout.setTime(time);
+								DateNode relevantDateNode = elementContainer.getDateNodeByWorkout(workout);
+								relevantDateNode.setSize(width - 4, height - 4);
+								relevantDateNode.setPos(xPos + 2, yPos + 2);
+								if (parentPane.getChildren().contains(relevantDateNode)) {
+									parentPane.getChildren().remove(relevantDateNode);
+								}else {
+									elementContainer.getNullDateNodes().remove(relevantDateNode);
+									elementContainer.getNonNullDateNodes().add(relevantDateNode);
+								}
 								
+								parentPane.getChildren().add(relevantDateNode);
+								elementContainer.getSelectedCycle().sortWorkouts();
+								elementContainer.sortNodes();
+								elementContainer.resetAllDateNodeUiInfo();
+
 							});
+
 						}
 						menu.getItems().add(allocateExistingWorkout);
 					}
@@ -166,63 +241,22 @@ public class DateSlot extends StackPane {
                 	if (db.hasString()) {
                 		//System.out.println("SHOULD BE DROPPED");
 	                	
-	                	DateNode oldNode = windowController.getStoredDateNode(); // THIS IS OLD LINE
-	                	nodeContainer.removeFromAllNodes(oldNode);
-	                	
-	                	DateNode newNode = new DateNode(oldNode.getWorkout());
-	                	nodeContainer.addToAllNodes(newNode);
-	                	newNode.setPrefSize(dateSlot.getWidth(), dateSlot.getHeight());
-	                	newNode.getWorkout().setDate(date);
-	                	newNode.getWorkout().setTime(time);
-	                	newNode.getWorkout().getParentCycle().sortWorkouts();
-	                	//System.out.println(newNode.getWorkout().getDate());
-	                	//System.out.println(newNode.getWorkout().getParentCycle().getWorkouts());
-	                	nodeContainer.resetAllPopups();
-	                	nodeContainer.resetAllLabels();
-	                	newNode.makeDraggable(windowController);
-	                	newNode.addPopup();
-	                	
-	                	
-	                	
-	                	Parent parent = oldNode.getParent();
-	                	if (parent.getClass().toString().equals("class javafx.scene.layout.HBox")) {
-	                		HBox parentHBox = (HBox) oldNode.getParent();
-		                	parentHBox.getChildren().remove(oldNode);
-	                	}else if (parent.getClass().toString().equals("class DateSlot")) {
-	                		DateSlot parentDateSlot = (DateSlot) oldNode.getParent();
-	                		parentDateSlot.getChildren().remove(oldNode);
-	                		parentDateSlot.addPopup();
-	                	}else {
-	                		System.out.println("Some error with parent of draggable");
-	                	}
+	                	DateNode transferredNode = elementContainer.getStoredDateNode(); // THIS IS OLD LINE 
+	                	DateSlot transferredFromDateSlot = elementContainer.getStoredDateSlot();
+                		transferredFromDateSlot.addPopup();
+
+                		transferredNode.setSize(width - 4, height - 4);
+                		transferredNode.setPos(xPos + 2, yPos + 2);
+                		transferredNode.getWorkout().setDate(date);
+                		transferredNode.getWorkout().setTime(time);
+	                	//trasnferredNode.getWorkout().getParentCycle().sortWorkouts();
+                		elementContainer.getSelectedCycle().sortWorkouts();
+                		elementContainer.sortNodes();
+	                	elementContainer.resetAllDateNodeUiInfo();
 	                	
 	                	dateSlot.removePopup();
-	                	
-	                	
-	                	
-	                	//System.out.println(node.hashCode());
-	                	
-	                	//System.out.println(thisDate + " set here");
-	                	
-	                	if (nodeContainer.getAllocatedNodes().contains(newNode) == false) {
-	                		nodeContainer.addToAllocatedNodes(newNode);
-	                	}
-	                	
-	                	
-	                	//DateNode replacementNode = new DateNode(node.getWorkout());
-	                	
-	                	
-	                	/*System.out.println(node.getParent());
-	                	//System.out.println(node.getParent().getWidth());
-	                	System.out.println(node.getWidth());
-	                	System.out.println(node.getMinWidth());
-	                	System.out.println(node.getMaxWidth());
-	                	System.out.println(node.getPrefWidth());
-	                	System.out.println(node.getPrefHeight());
-	                	System.out.println(node.getPadding());
-	                	*/
-	                	dateSlot.getChildren().clear();
-	                	dateSlot.getChildren().add(newNode);
+	                	elementContainer.getCalendarPane().getChildren().remove(transferredNode);
+	                	elementContainer.getCalendarPane().getChildren().add(transferredNode);
 	                	//dateSlot.setMaxWidth(100);
 	                	/*
 	                	 * set the date of the workout below

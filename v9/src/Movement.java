@@ -79,4 +79,12 @@ public class Movement extends CycleObject {
 	public String toString() {
 		return this.name;
 	}
+	public String fullToString() {
+		String resultStr = "";
+		resultStr += name;
+		for (Set set : sets) {
+			resultStr += "\n\t" + set;
+		}
+		return resultStr;
+	}
 }

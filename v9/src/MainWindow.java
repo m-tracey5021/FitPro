@@ -115,15 +115,17 @@ public class MainWindow implements EventHandler<ActionEvent> {
 
 			if (cycles.size() != 0) {
 				selectedCycle = (Cycle) treeItemToObjectMap.get(cycleTree.getSelectionModel().getSelectedItem());
-				readyNodes();
+				System.out.println(selectedCycle);
+				//readyNodes();
 				readyDate();
 				
 				selectedCycleLabel.setText("Cycle: " + selectedCycle.getCycleName());
 
 				
 				calendar.setCurrentlyFocusedDate(currentDatePointer);
-				calendar.setDateNodeContainer(dateNodeContainer);
-				calendar.setUpView();
+				//calendar.setDateNodeContainer(dateNodeContainer);
+
+				calendar.setUpView(selectedCycle);
 				//pickCalendarView(currentDatePointer);
 				//previousButton.setDisable(false);
 				//nextButton.setDisable(false);
@@ -145,7 +147,8 @@ public class MainWindow implements EventHandler<ActionEvent> {
 			CycleCreationWindow ccw = new CycleCreationWindow("New Cycle", currentUser, windowController);
 			if (windowController.getBool() == true) {
 				readyCycles(); // refresh the list
-				cycleTree = new TreeView<String>();
+				System.out.println(cycles);
+				//cycleTree = new TreeView<String>();
 				setUpCycleTree();
 				System.out.println("refreshed");
 			}
@@ -186,11 +189,11 @@ public class MainWindow implements EventHandler<ActionEvent> {
 		GridPane.setConstraints(selectedCycleVBox, 1, 0);
 		
 
-		calendar = new CalendarView(windowController, 700);
-		calendar.setDateNodeContainer(dateNodeContainer);
+		calendar = new CalendarView(700);
+		//calendar.setDateNodeContainer(dateNodeContainer);
 		calendar.setCurrentlyFocusedDate(defaultDate);
 		calendar.setCurrentViewType("Week");
-		calendar.setUpView();
+		calendar.setUpView(selectedCycle);
 		//calendar.setUpDefaultView();
 		GridPane.setConstraints(calendar, 1, 2, 1, 2);
 		
@@ -207,12 +210,12 @@ public class MainWindow implements EventHandler<ActionEvent> {
 		saveButton.setOnAction(e -> {
 			calendar.saveChanges(selectedCycle);
 			readyCycles();
-			readyNodes();
+			//readyNodes();
 			readyDate();
 			//System.out.println(currentDatePointer);
 			calendar.setCurrentlyFocusedDate(currentDatePointer);
 			calendar.setCurrentViewType("Week");
-			calendar.setUpView();
+			calendar.setUpView(selectedCycle);
 		});
 		saveButton.setDisable(true);
 
@@ -221,7 +224,7 @@ public class MainWindow implements EventHandler<ActionEvent> {
 			resetAll(selectedCycle);
 			calendar.setCurrentlyFocusedDate(defaultDate);
 			calendar.setCurrentViewType("Week");
-			calendar.setUpView();
+			calendar.setUpView(selectedCycle);
 		});
 		resetAllButton.setDisable(true);
 
@@ -266,6 +269,7 @@ public class MainWindow implements EventHandler<ActionEvent> {
 		}
 		
 	}
+	/*
 	public void readyNodes() {
 		if (selectedCycle != null) {
 			dateNodeContainer.resetAllNodes();
@@ -275,13 +279,22 @@ public class MainWindow implements EventHandler<ActionEvent> {
 				
 				newNode.addPopup();
 				newNode.makeDraggable(windowController);
+				if (workout.getDate() == null) {
+					dateNodeContainer.addToUnallocatedNodes(newNode);
+				}else {
+					dateNodeContainer.addToAllocatedNodes(newNode);
+				}
 				dateNodeContainer.addToAllNodes(newNode);
 			}
 		}
 	}
+	*/
 	
 
 	public void setUpCycleTree(){
+		if (cycleTree.getRoot() != null) {
+			cycleTree.getRoot().getChildren().clear();
+		}
 		TreeItem<String> root = new TreeItem<String>();
 		for (Cycle cycle : cycles) {
 			TreeItem<String> cycleItem = new TreeItem<String>(cycle.getCycleName());

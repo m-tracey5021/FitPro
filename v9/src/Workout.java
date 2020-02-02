@@ -114,7 +114,7 @@ public class Workout extends CycleObject {
 		if (workoutNumber == 0) {
 			result = "Unallocated Workout";
 		}else {
-			result = "Workout " + workoutNumber + ": " ;
+			result = "Workout " + workoutNumber;
 		}
 		return result;
 	}

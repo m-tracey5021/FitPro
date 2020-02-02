@@ -18,67 +18,57 @@ import javafx.scene.paint.*;
 
 public class DateNode extends StackPane {
 	
+	private CalendarViewElementContainer elementContainer;
 	private Workout workout;
 	private Label label;
+	private double width, height, xPos, yPos;
 	private boolean isAllocated;
 	
 	public DateNode(Node...children) {
 		super(children);
 		this.isAllocated = false;
-		this.setPrefSize(70, 30);
 		this.getStyleClass().add("dateNode");
 		//this.setStyle("-fx-background-color: #0099cc");
 		//this.setBackground(new Background(new BackgroundFill(Color.BLUE, CornerRadii.EMPTY, Insets.EMPTY)));
 		
-		String labelStr;
-		if (workout.getWorkoutNumber() == 0) {
-			labelStr = "Unallocated Workout";
-		}else {
-			labelStr = "Workout " + workout.getWorkoutNumber();
-		}
-		label = new Label(labelStr);
-		/*label.setMaxWidth(Double.MAX_VALUE);
-		AnchorPane.setLeftAnchor(label, 0.0);
-		AnchorPane.setRightAnchor(label, 0.0);
-		AnchorPane.setTopAnchor(label, 0.0);
-		AnchorPane.setBottomAnchor(label, 0.0);*/
-		label.getStyleClass().add("dateNodeLabel");
-		//label.setAlignment(Pos.CENTER);
-		
-		this.getChildren().add(label);
+		resetLabel();
 	}
 	
-	public DateNode(Workout workout, Node...children) {
+	public DateNode(Workout workout, CalendarViewElementContainer elementContainer, Node...children) {
 		super(children);
 		this.workout = workout;
+		this.elementContainer = elementContainer;
 		this.isAllocated = false;
-		this.setPrefSize(70, 30);
 		this.getStyleClass().add("dateNode");
 		//this.setStyle("-fx-background-color: #0099cc");
 		//this.setBackground(new Background(new BackgroundFill(Color.BLUE, CornerRadii.EMPTY, Insets.EMPTY)));
-		String labelStr;
-		if (workout.getWorkoutNumber() == 0) {
-			labelStr = "Unallocated Workout";
-		}else {
-			labelStr = "Workout " + workout.getWorkoutNumber();
-		}
-		label = new Label(labelStr);
-		//label.setMaxWidth(Double.MAX_VALUE);
-		//AnchorPane.setLeftAnchor(label, 0.0);
-		//AnchorPane.setRightAnchor(label, 0.0);
-		//AnchorPane.setTopAnchor(label, 0.0);
-		//AnchorPane.setBottomAnchor(label, 0.0);
-		label.getStyleClass().add("dateNodeLabel");
-		//label.setAlignment(Pos.CENTER);
-		
-		this.getChildren().add(label);
+		resetUiInfo();
+
 	}
 	
 	public Workout getWorkout() {
 		return this.workout;
 	}
+	public double[] getPos() {
+		double[] pos = {xPos, yPos};
+		return pos;
+	}
+	public double[] getSize() {
+		double[] size = {width, height};
+		return size;
+	}
 	public void setWorkout(Workout w) {
 		this.workout = w;
+	}
+	public void setPos(double x, double y) {
+		this.relocate(x, y);
+		this.xPos = x;
+		this.yPos = y;
+	}
+	public void setSize(double width, double height) {
+		this.setPrefSize(width, height);
+		this.width = width;
+		this.height = height;
 	}
 	public void setIsAllocated(boolean isAllocated) {
 		this.isAllocated = isAllocated;
@@ -86,24 +76,19 @@ public class DateNode extends StackPane {
 	public void resetLabel() {
 		this.getChildren().remove(label);
 		String labelStr;
-		if (workout.getWorkoutNumber() == 0) {
+		if (workout.getDateTime() == null) {
+		
 			labelStr = "Unallocated Workout";
 		}else {
 			labelStr = "Workout " + workout.getWorkoutNumber();
 		}
 		label = new Label(labelStr);
-		//label.setMaxWidth(Double.MAX_VALUE);
-		//AnchorPane.setLeftAnchor(label, 0.0);
-		//AnchorPane.setRightAnchor(label, 0.0);
-		//AnchorPane.setTopAnchor(label, 0.0);
-		//AnchorPane.setBottomAnchor(label, 0.0);
 		label.getStyleClass().add("dateNodeLabel");
-		//label.setAlignment(Pos.CENTER);
 		this.getChildren().add(label);
 	}
 	public void addPopup() {
 		String str = "";
-		if (workout.getDate() == null) {
+		if (workout.getDateTime() == null) {
 			str = "Unallocated Workout: \n\n" + workout.toString();
 		}else {
 			str = workout.getDate() + ": \n\n" + workout.toString();
@@ -114,7 +99,16 @@ public class DateNode extends StackPane {
 	public void removePopup() {
 		Tooltip.uninstall(this, null);
 	}
-	public void makeDraggable(WindowController windowController) {
+	public void resetPopup() {
+		removePopup();
+		addPopup();
+	}
+	
+	public void resetUiInfo() {
+		resetLabel();
+		resetPopup();
+	}
+	public void makeDraggable() {
 		DateNode node = this;
 		node.setOnDragDetected(new EventHandler<MouseEvent>() {
 			
@@ -125,7 +119,8 @@ public class DateNode extends StackPane {
 				ClipboardContent content = new ClipboardContent();
 				content.putString(workout.getId());
 				db.setContent(content);
-				windowController.setStoredDateNode(node);
+				elementContainer.setStoredDateNode(node);
+				elementContainer.setStoredDateSlot(elementContainer.getLastEnteredDateSlot());
 				//windowController.setStoredWorkout(w);
 				/* allow any transfer mode */
 				event.consume();
