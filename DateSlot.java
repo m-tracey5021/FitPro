@@ -117,16 +117,21 @@ public class DateSlot extends StackPane {
 					ContextMenu menu = new ContextMenu();
 					MenuItem createNewWorkoutItem = new MenuItem("Add new Workout");
 					createNewWorkoutItem.setOnAction(e -> {
-						
+						WindowController controller = new WindowController();
+						NewWorkoutModal newWorkoutModal = new NewWorkoutModal(controller);
+						if (controller.getStoredWorkout() != null) {
+							elementContainer.getSelectedCycle().getWorkouts().add(controller.getStoredWorkout());
+							elementContainer.getSelectedCycle().sortWorkouts();
+						}
 					});
 					menu.getItems().add(createNewWorkoutItem);
-					if (elementContainer.getWorkouts() != null) {
+					if (elementContainer.getSelectedCycle() != null) {
 						Menu allocateExistingWorkout = new Menu("Allocate existing Workout");
 						//nodeContainer.sortAllDateNodes();
 						
-						for (Workout workout: elementContainer.getWorkouts()) {
+						for (Workout workout: elementContainer.getSelectedCycle().getWorkouts()) {
 							//Workout workout = dateNode.getWorkout();
-							
+							//System.out.println(workout);
 							Menu workoutSubMenu = new Menu(workout.basicToString());
 							allocateExistingWorkout.getItems().add(workoutSubMenu);
 							//System.out.println(dateNode);
@@ -135,7 +140,7 @@ public class DateSlot extends StackPane {
 							for (Movement movement : workout.getMovements()) {
 								movementsStr += movement.fullToString() + "\n\n";
 							}
-							System.out.println(movementsStr);
+							//System.out.println(movementsStr);
 							MenuItem movementsItem = new MenuItem(movementsStr);
 							workoutSubMenu.getItems().add(movementsItem);
 							
@@ -154,7 +159,7 @@ public class DateSlot extends StackPane {
 								
 								parentPane.getChildren().add(relevantDateNode);
 								elementContainer.getSelectedCycle().sortWorkouts();
-								elementContainer.sortNodes();
+								//elementContainer.sortNodes();
 								elementContainer.resetAllDateNodeUiInfo();
 
 							});
@@ -251,7 +256,7 @@ public class DateSlot extends StackPane {
                 		transferredNode.getWorkout().setTime(time);
 	                	//trasnferredNode.getWorkout().getParentCycle().sortWorkouts();
                 		elementContainer.getSelectedCycle().sortWorkouts();
-                		elementContainer.sortNodes();
+                		//elementContainer.sortNodes();
 	                	elementContainer.resetAllDateNodeUiInfo();
 	                	
 	                	dateSlot.removePopup();

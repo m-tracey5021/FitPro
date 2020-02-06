@@ -125,6 +125,7 @@ public class DateNode extends StackPane {
 				/* allow any transfer mode */
 				event.consume();
 			}
+			
 		});
 		node.setOnMouseDragged(new EventHandler<MouseEvent>() {
 			public void handle(MouseEvent event) {
