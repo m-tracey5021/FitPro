@@ -46,7 +46,7 @@ public class MainWindow implements EventHandler<ActionEvent> {
 
 	private ArrayList<Cycle> cycles;
 	private Cycle selectedCycle;
-	private DateNodeContainer dateNodeContainer;
+	//private DateNodeContainer dateNodeContainer;
 	private Workout selectedWorkout;
 
 	private WindowController windowController;
@@ -61,7 +61,7 @@ public class MainWindow implements EventHandler<ActionEvent> {
 		currentUser = user;
 		cycles = new ArrayList<Cycle>();
 		selectedCycle = null;
-		dateNodeContainer = new DateNodeContainer();
+		//dateNodeContainer = new DateNodeContainer();
 		windowController = new WindowController();
 		dtf = DateTimeFormatter.ofPattern("dd/MM//yyyy");
 		sqlService = new SQLService();
@@ -216,6 +216,7 @@ public class MainWindow implements EventHandler<ActionEvent> {
 			calendar.setCurrentlyFocusedDate(currentDatePointer);
 			calendar.setCurrentViewType("Week");
 			calendar.setUpView(selectedCycle);
+			setUpCycleTree();
 		});
 		saveButton.setDisable(true);
 
@@ -269,26 +270,7 @@ public class MainWindow implements EventHandler<ActionEvent> {
 		}
 		
 	}
-	/*
-	public void readyNodes() {
-		if (selectedCycle != null) {
-			dateNodeContainer.resetAllNodes();
-			dateNodeContainer.resetAllocatedNodes();
-			for (Workout workout : selectedCycle.getWorkouts()) {
-				DateNode newNode = new DateNode(workout);
-				
-				newNode.addPopup();
-				newNode.makeDraggable(windowController);
-				if (workout.getDate() == null) {
-					dateNodeContainer.addToUnallocatedNodes(newNode);
-				}else {
-					dateNodeContainer.addToAllocatedNodes(newNode);
-				}
-				dateNodeContainer.addToAllNodes(newNode);
-			}
-		}
-	}
-	*/
+
 	
 
 	public void setUpCycleTree(){
@@ -338,8 +320,9 @@ public class MainWindow implements EventHandler<ActionEvent> {
 
 		readyCycles();
 		readyDate();
-		dateNodeContainer.resetAllLabels();
-		dateNodeContainer.resetAllPopups();
+		calendar.setUpView(selectedCycle);
+
+
 
 	}
 	

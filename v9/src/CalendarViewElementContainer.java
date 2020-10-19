@@ -15,7 +15,6 @@ public class CalendarViewElementContainer {
 	private ArrayList<DateNode> allDateNodes;
 	private DateNode storedDateNode;
 	private Cycle selectedCycle;
-	private ArrayList<Workout> workouts;
 	private Pane calendarPane;
 	private WindowController windowController;
 	
@@ -36,7 +35,6 @@ public class CalendarViewElementContainer {
 		this.allDateNodes.addAll(nonNullDateNodes);
 		this.allDateNodes.addAll(nullDateNodes);
 		this.selectedCycle = selectedCycle;
-		this.workouts = selectedCycle.getWorkouts();
 		this.calendarPane = pane;
 
 	}
@@ -81,9 +79,6 @@ public class CalendarViewElementContainer {
 		return this.selectedCycle;
 	}
 	
-	public ArrayList<Workout> getWorkouts(){
-		return this.workouts;
-	}
 	
 	public Pane getCalendarPane() {
 		return this.calendarPane;
@@ -132,18 +127,10 @@ public class CalendarViewElementContainer {
 	public void setCycle(Cycle cycle) {
 		if (cycle != null) {
 			this.selectedCycle = cycle;
-			this.workouts = cycle.getWorkouts();
-			System.out.println(this.workouts);
+			//this.workouts = cycle.getWorkouts();
+			//System.out.println(this.workouts);
 		}
 		
-	}
-	
-	public void setWorkouts(ArrayList<Workout> workouts) {
-		this.workouts = workouts;
-	}
-	
-	public void addWorkout(Workout workout) {
-		this.workouts.add(workout);
 	}
 	
 	public void setCalendarPane(Pane pane) {
@@ -194,7 +181,7 @@ public class CalendarViewElementContainer {
 		allDateNodes.addAll(nullDateNodes);
 		
 	}
-	
+	/*
 	public void sortWorkouts() {
 		ArrayList<Workout> sorted = new ArrayList<Workout>();
 		ArrayList<Workout> nullDateWorkouts = new ArrayList<Workout>();
@@ -263,6 +250,7 @@ public class CalendarViewElementContainer {
 
 		
 	}
+	*/
 	
 	
 	

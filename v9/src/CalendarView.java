@@ -104,7 +104,7 @@ public class CalendarView extends GridPane {
 		previousButton.setOnAction(e -> {
 			if (currentViewType.equals("Week")) {
 				currentlyFocusedDate = currentlyFocusedDate.minusDays(7);
-				System.out.println("after date change: " + currentlyFocusedDate);
+
 				
 			}else if (currentViewType.equals("Month")) {
 				currentlyFocusedDate = currentlyFocusedDate.minusMonths(1);
@@ -149,6 +149,8 @@ public class CalendarView extends GridPane {
 		scrollPane.setPrefSize(calendarWidth, 275);
 		scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
 		scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+		scrollPane.setVmin(0.0);
+		
 		GridPane.setConstraints(scrollPane, 0, 2);
 		
 		this.getChildren().addAll(currentFocusWithSeparators, horizontalAxisLabelPane, scrollPane);
@@ -292,9 +294,7 @@ public class CalendarView extends GridPane {
 		
 		//System.out.println("Passed startDate: " + startDate);
 		this.selectedCycle = selectedCycle;
-		System.out.println("setup triggered");
-		System.out.println(currentlyFocusedDate);
-		System.out.println(currentViewType);
+
 		//this.workouts = selectedCycle.getWorkouts();
 		//calendarPane.getChildren().clear();
 		
@@ -329,14 +329,18 @@ public class CalendarView extends GridPane {
 		
 		if (currentViewType.equals("Week")) {
 			
+
 			setUpWeekView();
+			scrollPane.setVmax((24 * dateSlotHeight) + 60);
 			setUpHorizontalAxisLabels();
 			setUpCurrentFocusPane();
 			addNonNullWorkouts();
+			scrollToFirstWorkout();
 			
 		}else if (currentViewType.equals("Month")) {
 			
 			setUpMonthView();
+			scrollPane.setVmax((5 * dateSlotHeight) + 60);
 			setUpHorizontalAxisLabels();
 			setUpCurrentFocusPane();
 			addNonNullWorkouts();
@@ -344,6 +348,7 @@ public class CalendarView extends GridPane {
 		} else if (currentViewType.equals("Year")) {
 			
 			setUpYearView();
+			scrollPane.setVmax((31 * dateSlotHeight) + 60);
 			setUpHorizontalAxisLabels();
 			setUpCurrentFocusPane();
 			addNonNullWorkouts();
@@ -354,6 +359,8 @@ public class CalendarView extends GridPane {
 	public void setUpWeekView(){
 		this.dateSlotWidth = (calendarWidth - (2 * edgeWidth)) / 7;
 		this.dateSlotHeight = 30;
+
+		
 		
 		LocalTime startTime = LocalTime.MIN;
 		int dayOfWeek = currentlyFocusedDate.getDayOfWeek().getValue();
@@ -400,6 +407,7 @@ public class CalendarView extends GridPane {
 	public void setUpMonthView() {
 		this.dateSlotWidth = (calendarWidth - (2 * edgeWidth)) / 7;
 		this.dateSlotHeight = 30;
+
 		
 		Month month = currentlyFocusedDate.getMonth();
 		int numberOfDateNodes = month.length(currentlyFocusedDate.isLeapYear());
@@ -505,165 +513,73 @@ public class CalendarView extends GridPane {
 		borderPane.setCenter(calendarPane);
 
 	}
-	/*
-	public void readyNodes() {
-		if (selectedCycle != null) {
-			dateNodeContainer.resetAllNodes();
-			dateNodeContainer.resetAllocatedNodes();
-			for (Workout workout : selectedCycle.getWorkouts()) {
-				DateNode newNode = new DateNode(workout);
-				
-				newNode.addPopup();
-				newNode.makeDraggable(windowController);
-				if (workout.getDate() == null) {
-					dateNodeContainer.addToUnallocatedNodes(newNode);
-				}else {
-					dateNodeContainer.addToAllocatedNodes(newNode);
-				}
-				dateNodeContainer.addToAllNodes(newNode);
-			}
-		}
-	}
-	*/
+
 	
 	
 	
 	public void addNonNullWorkouts() {
-		if (elementContainer.getWorkouts() != null) {
-			for (Workout workout : elementContainer.getWorkouts()) {
+		if (elementContainer.getSelectedCycle() != null) {
+			for (Workout workout : elementContainer.getSelectedCycle().getWorkouts()) {
 				if (workout.getDateTime() != null) {
 					LocalDate date = workout.getDate();
 					LocalTime time = workout.getTime();
 					DateNode nodeToAdd = elementContainer.getDateNodeByWorkout(workout);
 					for (DateSlot dateSlot : elementContainer.getDateSlots()) {
-						
-						if (workout.getDateTime().equals(dateSlot.getDateTime())) {
-							nodeToAdd.setSize(dateSlotWidth - 4, dateSlotHeight - 4);
-							nodeToAdd.setPos(dateSlot.getPos()[0] + 2, dateSlot.getPos()[1] + 2);
-							
-						}
-						/*
+						System.out.println("SCHEMAZZED");
 						if (currentViewType.equals("Week")) {
 							if (workout.getDateTime().equals(dateSlot.getDateTime())) {
-								nodeToAdd.setPos(dateSlot.getPos()[0], dateSlot.getPos()[1]);
+								nodeToAdd.setSize(dateSlotWidth - 4, dateSlotHeight - 4);
+								nodeToAdd.setPos(dateSlot.getPos()[0] + 2, dateSlot.getPos()[1] + 2);
+								calendarPane.getChildren().add(nodeToAdd);
 							}
-						}else if (currentViewType.equals("Month")) {
+						}else {
 							if (workout.getDate().equals(dateSlot.getDate())) {
-
-							}
-						}else if (currentViewType.equals("Year")) {
-							if (workout.getDate().equals(dateSlot.getDate())) {
-
+								nodeToAdd.setSize(dateSlotWidth - 4, dateSlotHeight - 4);
+								nodeToAdd.setPos(dateSlot.getPos()[0] + 2, dateSlot.getPos()[1] + 2);
+								calendarPane.getChildren().add(nodeToAdd);
 							}
 						}
-						*/
-						
 					}
-					
-					calendarPane.getChildren().add(nodeToAdd);
 				}
 			}
 		}
 		
 	}
-	/*
-	public void addAllocatedEvents() {
-		for (DateNode node : dateNodeContainer.getAllNodes()) {
-			LocalDateTime workoutDateTime = node.getWorkout().getDateTime();
-			if (workoutDateTime != null){
-				for (DateSlot dateSlot : allDateSlots) {
-					if (currentViewType.equals("Week")) {
-						if (dateSlot.getDateTime().equals(workoutDateTime)){
-							addEventToDateSlot(dateSlot, node);
-						}
-					}else if (currentViewType.equals("Month")) {
-						if (dateSlot.getDate().equals(workoutDateTime.toLocalDate())) {
-							addEventToDateSlot(dateSlot, node);
-						}
-					}else if (currentViewType.equals("Year")) {
-						if (dateSlot.getDate().equals(workoutDateTime.toLocalDate())) {
-							addEventToDateSlot(dateSlot, node);
-						}
-					}
-					
-				}
-			}
-			
-		}
-		
-		
-		// allocate the node based on the date
-	}
-	
-	*/
-	
-	
-	
-	
-	/*
-	public void addEventToDateSlot(DateSlot dateSlot, DateNode dateNode) {
-		dateSlot.getChildren().add(dateNode);
-		Tooltip.uninstall(dateSlot, null);
-		elementContainer.addDateNode(dateNode);
-		
-	}
-	*/
-	
-	//public void addAllocatedEvents(ArrayList<DateNode> nodes) {
-		
-	//}
-	
-	
-	
-	/*
+
 	public void scrollToFirstWorkout() {
-		//System.out.println("scrollTo fired");
-		this.applyCss();
-		this.layout();
-		if (dateNodeContainer.getAllocatedNodes().size() != 0) {
-			dateNodeContainer.sortAllocatedDateNodes();
-			DateNode firstNode = dateNodeContainer.getAllocatedNodes().get(0);
+		calendarPane.applyCss();
+		calendarPane.layout();
+		if (elementContainer.getSelectedCycle() != null) {
+			//elementContainer.getSelectedCycle().sortWorkouts();
+			DateNode firstNode = elementContainer.getDateNodeByWorkout(elementContainer.getSelectedCycle().getWorkouts().get(0));
 			LocalTime time = firstNode.getWorkout().getTime();
-			int numberOfVDateSlots;
-			int verticalValue;
 			if (time != null) {
-				numberOfVDateSlots = Integer.parseInt(time.toString().substring(0, 2));
-				verticalValue = numberOfVDateSlots * 30;
+				int numberOfVDateSlots = Integer.parseInt(time.toString().substring(0, 2));
+				double verticalValue = numberOfVDateSlots * dateSlotHeight;
 		        scrollPane.setVvalue(verticalValue);
-			}else {
-				numberOfVDateSlots = 12;
-				verticalValue = numberOfVDateSlots * 30;
-				scrollPane.setVvalue(verticalValue);
 			}
-			
-	        //scrollPane.setHvalue(x/width);
 		}
 		
 	}
-	*/
+	
 	public void saveChanges(Cycle selectedCycle) {
-		if (elementContainer.getNonNullDateNodes().size() != 0) {
+		if (elementContainer.getSelectedCycle() != null) {
 			SQLService sql = new SQLService();
-			LocalDate firstDate = elementContainer.getNonNullDateNodes().get(0).getWorkout().getDate();
-			LocalDate endDate = elementContainer.getNonNullDateNodes().get(elementContainer.getNonNullDateNodes().size() - 1).getWorkout().getDate();
+			//elementContainer.getSelectedCycle().sortWorkouts();
+			
+			LocalDate firstDate = elementContainer.getSelectedCycle().getWorkouts().get(0).getDate();
+			LocalDate endDate = elementContainer.getSelectedCycle().getWorkouts().get(elementContainer.getSelectedCycle().getWorkouts().size() - 1).getDate();
 			
 			LocalDate dates[] = {firstDate, endDate};
 			selectedCycle.setDates(dates);
-			selectedCycle.sortWorkouts();
-			//for (Workout w : selectedCycle.getWorkouts()) {
-			//	System.out.println(w.getDate());
-			//}
+
 			sql.upsertCycle(selectedCycle);
+			
+		}else { // if new cycle with no name, just adding workouts
+			
 		}
 		
-		//for (DateNode changedNode : changedNodes) {
-			
-		//	Workout w = changedNode.getWorkout();
-		//	sql.upsertWorkout(w, selectedCycle.getId());
-			
-			
-		//}
-		//changedNodes.clear(); // reset so that if not moved again before next save, no unessecary sql
+
 		
 		
 			
